@@ -16,6 +16,16 @@ const TokenType = {
     OpNot:          'anbern/client/fgl/token/operator/not',
     OpAnd:          'anbern/client/fgl/token/operator/and',
     OpOr:           'anbern/client/fgl/token/operator/or',
+    BrLParen:       'anbern/client/fgl/token/left-parenthesis',
+    BrRParen:       'anbern/client/fgl/token/right-parenthesis',
+    BrLBrack:       'anbern/client/fgl/token/left-bracket',
+    BrRBrack:       'anbern/client/fgl/token/right-bracket',
+    BrLBrace:       'anbern/client/fgl/token/left-brace',
+    BrRBrace:       'anbern/client/fgl/token/right-brace',
+    PctDot:         'anbern/client/fgl/token/punctuation-dot',
+    PctColon:       'anbern/client/fgl/token/punctuation-colon',
+    PctComma:       'anbern/client/fgl/token/punctuation-comma',
+    PctSemicolon:   'anbern/client/fgl/token/punctuation-semicolon',
     KeyIf:          'anbern/client/fgl/token/keyword/if',
     KeyThen:        'anbern/client/fgl/token/keyword/then',
     KeyElse:        'anbern/client/fgl/token/keyword/else',
@@ -30,15 +40,16 @@ const TokenType = {
     Identifier:     'anbern/client/fgl/token/identifier',
     StringLiteral:  'anbern/client/fgl/token/literal/string',
     NumberLiteral:  'anbern/client/fgl/token/literal/number',
-    BoolLiteral:    'anbern/client/fgl/token/literal/bool'
+    BoolLiteral:    'anbern/client/fgl/token/literal/bool',
+    PosEOF:         'anbern/client/fgl/token/position/eof'
 }
 
 class SourceLocation {
-    constructor(fglModule, lineNumber, fromPosition, toPosition) {
+    constructor(fglModule, lineNumber, fromPositionInLine, toPositionInLine) {
         this.fglModule      = fglModule;
         this.lineNumber     = lineNumber;
-        this.fromPosition   = fromPosition;
-        this.toPosition     = toPosition;
+        this.fromPositionInLine   = fromPositionInLine;
+        this.toPositionInLine     = toPositionInLine;
     }
 }
 
@@ -69,6 +80,64 @@ class Classifier {
     }
 }
 
+class Scanner  {
+    constructor(source) {
+        this.source     = source;
+        this.sourceLength = source.length;
+        this.lineNumber = 0;
+        this.position   = 0;
+        this.firstPosInLine   = 0;
+        this.lastPosInLine    = 0;
+        this.hasEOF     = false;
+    }
+
+    scan() {
+        const tokens = [];
+        do {
+            tokens.push(this.getNextToken());
+        } while (!this.hasEOF);
+        return tokens;
+    }
+
+    getNextToken() {
+        this.skipWhitespace();
+        if (!this.hasEOF) {
+
+        } else {
+            return {};
+        }
+    }
+
+    peek() {
+        if (this.position <= this.sourceLength) {
+            return this.source.substr(this.position,1);
+        } else {
+            return null;
+        }
+    }
+
+    skipWhitespace() {
+        let nextChar = this.peek();
+        while(nextChar && this.isWhitespace(nextChar)) {
+            if (nextChar === '\n') {
+                this.lineNumber = this.lineNumber + 1;
+                this.firstPosInLine = 0;
+                this.lastPosInLine = 0;
+            } else {
+                this.lastPosInLine = this.lastPosInLine + 1;
+            }
+            this.position = this.position + 1;
+        }
+    }
+
+    isWhitespace(character) {
+        return character === ' ' ||
+            character === '\t'   ||
+            character === '\r'   ||
+            character === '\n';
+    }
+}
+
 
 /*
  * Module System
@@ -93,7 +162,8 @@ class FglModule {
     }
 
     scan(source,sourceNotifications) {
-        return [];
+        const scanner = new Scanner(source, sourceNotifications);
+        return scanner.scan();
     }
 
     parse(tokens, sourceNotification) {
