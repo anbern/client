@@ -1,7 +1,8 @@
 export class Scanner {
     constructor(sourceString) {
-        if (!sourceString || (sourceString && sourceString === ''))
-            throw 'Source must be non-emtpy String';
+        if (!sourceString || (sourceString && sourceString === '')) {
+            throw new Error('Source must be non-emtpy String');
+        }
 
         this.sourceString = sourceString;
         this.maxPosition  = sourceString.length - 1;
