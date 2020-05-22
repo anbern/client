@@ -91,7 +91,9 @@ function testNumberSuite() {
 function testRealScan() {
     const scanner = new Scanner ('if (x > 0) then\n\tprint "GREATER"; \nelse\n\tprint "SMALLER" ;');
     const tokens  = scanner.scan();
-    console.log(tokens);
+
+    //console.log(tokens);
+
     assertToken('KEYWORD','if',tokens[0]);
     assertToken('WHITESPACE',' ',tokens[1]);
     assertToken('BRACKET','(',tokens[2]);
@@ -99,14 +101,23 @@ function testRealScan() {
     assertToken('WHITESPACE',' ',tokens[4]);
     assertToken('IDENTIFIER','>',tokens[5]);
     assertToken('WHITESPACE',' ',tokens[6]);
-    assertToken('NUMBER','0',tokens[7]);
+    assertToken('NUMBERLITERAL','0',tokens[7]);
     assertToken('BRACKET',')',tokens[8]);
     assertToken('WHITESPACE',' ',tokens[9]);
     assertToken('KEYWORD','then',tokens[10]);
     assertToken('WHITESPACE','\n\t',tokens[11]);
     assertToken('IDENTIFIER','print',tokens[12]);
     assertToken('WHITESPACE',' ',tokens[13]);
-    assertToken('IDENTIFIER','GREATER',tokens[14]);
+    assertToken('STRINGLITERAL','"GREATER"',tokens[14]);
+    assertToken('PUNCTUATION',';',tokens[15]);
+    assertToken('WHITESPACE',' \n',tokens[16]);
+    assertToken('KEYWORD','else',tokens[17]);
+    assertToken('WHITESPACE','\n\t',tokens[18]);
+    assertToken('IDENTIFIER','print',tokens[19]);
+    assertToken('WHITESPACE',' ',tokens[20]);
+    assertToken('STRINGLITERAL','"SMALLER"',tokens[21]);
+    assertToken('WHITESPACE',' ',tokens[22]);
+    assertToken('PUNCTUATION',';',tokens[23]);
 
 }
 
