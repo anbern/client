@@ -1,3 +1,57 @@
+const ScannedCharacters = {
+    isWhitespace(character) {
+        return (
+            character === ' ' ||
+            character === '\t' ||
+            character === '\r' ||
+            character === '\n');
+    },
+
+    isBracket(character) {
+        return (
+            character === '(' ||
+            character === ')' ||
+            character === '[' ||
+            character === ']' ||
+            character === '{' ||
+            character === '}'
+        );
+    },
+
+    isPunctuation(character) {
+        return (
+            character === '.' ||
+            character === ';' ||
+            character === ':' ||
+            character === '!' ||
+            character === '?'
+        );
+    },
+
+    isQuotationMark(character) {
+        return (
+            character === '"'
+        );
+    },
+
+    isNumber(character) {
+        return (
+            character === '0' ||
+            character === '1' ||
+            character === '2' ||
+            character === '3' ||
+            character === '4' ||
+            character === '5' ||
+            character === '6' ||
+            character === '7' ||
+            character === '8' ||
+            character === '9' );
+    },
+
+    isEOF (character) {
+        return character === '';
+    }
+};
 export class Scanner {
     constructor(sourceString) {
         if (!sourceString || (sourceString && sourceString === '')) {
@@ -19,21 +73,21 @@ export class Scanner {
         const tokens = [];
         let peekedCharacter;
         let scannedString, tokenType;
-        while(!this.isEOF(peekedCharacter = this.peek())) {
+        while(!ScannedCharacters.isEOF(peekedCharacter = this.peek())) {
             this.tokenStartPositionInLine = this.positionInLine;
-            if (this.isWhitespace(peekedCharacter)) {
+            if (ScannedCharacters.isWhitespace(peekedCharacter)) {
                 tokenType = 'WHITESPACE';
                 scannedString = this.scanWhitespace();
-            } else if (this.isQuotationMark(peekedCharacter)) {
+            } else if (ScannedCharacters.isQuotationMark(peekedCharacter)) {
                 tokenType = 'STRINGLITERAL';
                 scannedString = this.scanStringLiteral();
-            } else if (this.isNumber(peekedCharacter)) {
+            } else if (ScannedCharacters.isNumber(peekedCharacter)) {
                 tokenType = 'NUMBERLITERAL';
                 scannedString = this.scanNumberLiteral();
-            } else if (this.isBracket(peekedCharacter)) {
+            } else if (ScannedCharacters.isBracket(peekedCharacter)) {
                 tokenType = 'BRACKET';
                 scannedString = this.scanBracket();
-            } else if (this.isPunctuation(peekedCharacter)) {
+            } else if (ScannedCharacters.isPunctuation(peekedCharacter)) {
                 tokenType = 'PUNCTUATION';
                 scannedString = this.scanPunctuation();
             } else {
@@ -48,6 +102,13 @@ export class Scanner {
                 lexxem:    scannedString
             });
         }
+        tokens.push({
+            tokenType: 'EOF',
+            lineNumber: this.lineNumber,
+            startPosition: this.tokenStartPositionInLine,
+            endPosition: this.positionInLine - 1,
+            lexxem: '$'
+        });
         return tokens;
     }
 
@@ -66,20 +127,20 @@ export class Scanner {
         }
     }
     scanBracket() {
-        return this.scanSomething(character => !this.isBracket(character));
+        return this.scanSomething(character => !ScannedCharacters.isBracket(character));
     }
 
     scanPunctuation() {
-        return this.scanSomething(character => !this.isPunctuation(character));
+        return this.scanSomething(character => !ScannedCharacters.isPunctuation(character));
     }
 
     scanWhitespace() {
-        return this.scanSomething(character => !this.isWhitespace(character));
+        return this.scanSomething(character => !ScannedCharacters.isWhitespace(character));
     }
 
     scanStringLiteral() {
         return this.scanSomething(character => {
-            if (this.isQuotationMark(character)) {
+            if (ScannedCharacters.isQuotationMark(character)) {
                 //the string stops here, include the closing quotation mark
                 //break at position AFTER closing quotation mark
                 this.breakStringLiteral = true;
@@ -100,14 +161,14 @@ export class Scanner {
 
     scanNumberLiteral() {
         return this.scanSomething(character =>
-            !this.isNumber(character));
+            !ScannedCharacters.isNumber(character));
     }
 
     scanSomething(breakingFunction) {
         let result = '';
         let nextCharacter = this.consumeCharacterAtCurrentPosition();
         let peekedCharacter;
-        while (!this.isEOF(nextCharacter)) {
+        while (!ScannedCharacters.isEOF(nextCharacter)) {
             result = result + nextCharacter;
             peekedCharacter = this.peek();
             if (breakingFunction(peekedCharacter)) {
@@ -141,63 +202,142 @@ export class Scanner {
 
     terminatesIdentifierKeywordNumber(character) {
         return (
-            this.isEOF(character)         ||
-            this.isWhitespace(character)  ||
-            this.isPunctuation(character) ||
-            this.isBracket(character)
+            ScannedCharacters.isEOF(character)         ||
+            ScannedCharacters.isWhitespace(character)  ||
+            ScannedCharacters.isPunctuation(character) ||
+            ScannedCharacters.isBracket(character)
         );
     }
 
-    isWhitespace(character) {
-        return (
-            character === ' ' ||
-            character === '\t' ||
-            character === '\r' ||
-            character === '\n');
+}
+
+class AstNode {
+
+    constructor(nodeType) {
+        this.nodeType = nodeType;
+        this.children = [];
     }
 
-    isBracket(character) {
-        return (
-            character === '(' ||
-            character === ')' ||
-            character === '[' ||
-            character === ']' ||
-            character === '{' ||
-            character === '}'
-        );
+    addChild(astNode) {
+        this.children.push(astNode);
     }
 
-    isPunctuation(character) {
-        return (
-          character === '.' ||
-          character === ';' ||
-          character === ':' ||
-          character === '!' ||
-          character === '?'
-        );
+}
+
+class OpNode extends AstNode {
+
+    constructor(nodeType, opCode) {
+        super(nodeType);
+        this.opCode = opCode;
     }
 
-    isQuotationMark(character) {
-        return (
-          character === '"'
-        );
-    }
-    isNumber(character) {
-        return (
-            character === '0' ||
-            character === '1' ||
-            character === '2' ||
-            character === '3' ||
-            character === '4' ||
-            character === '5' ||
-            character === '6' ||
-            character === '7' ||
-            character === '8' ||
-            character === '9' );
+}
+
+export class Parser {
+
+    constructor(tokens) {
+        this.tokens = tokens;
+        this.nextTokenPosition = 0;
+        this.maxTokenPosition = this.tokens.length - 1;
     }
 
-    isEOF (character) {
-        return character === '';
+    //€ is epsilon :-)
+
+    //factor => number factorRest
+    //factorRest => ('*'|'/') factor
+    //            | €
+    factor() {
+        const nextToken = this.peekToken();
+        if (this.isNumberLiteral(nextToken)) {
+            this.consumeToken();
+            const factorRest = this.factorRest();
+            if (factorRest === null) {
+               return nextToken;
+            } else {
+               const opNode = new OpNode('FACTOR',factorRest.opCode);
+               opNode.addChild(nextToken);
+               opNode.addChild(factorRest.factor);
+               return opNode;
+            }
+        } else {
+            throw new Error('Factor: expected number literal but found ' + nextToken.lexxem);
+        }
+    }
+
+    factorRest() {
+        const nextToken = this.peekToken();
+        if (this.isOperatorTimes(nextToken) || this.isOperatorDivide(nextToken)) {
+            this.consumeToken();
+            const nextFactor = this.factor();
+            return ({
+                opCode: nextToken,
+                factor: nextFactor
+            });
+        } else {
+            return null;
+        }
+    }
+
+
+    //term => factor termRest
+    //termRest => ('+'|'-') term
+    //          | €
+
+    term() {
+        const firstFactor = this.factor();
+        const termRest = this.termRest();
+        if (termRest === null) {
+            return firstFactor;
+        } else {
+            const opNode = new OpNode('TERM', termRest.opCode);
+            opNode.addChild(firstFactor);
+            opNode.addChild(termRest.term);
+            return opNode;
+        }
+    }
+
+    termRest() {
+        const nextToken = this.peekToken();
+        if (this.isOperatorPlus(nextToken) || this.isOperatorMinus(nextToken)) {
+            this.consumeToken();
+            const nextTerm = this.term();
+            return ({
+                opCode: nextToken,
+                term: nextTerm
+            });
+        } else {
+            return null;
+        }
+    }
+
+    isOperatorTimes(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '*');
+    }
+    isOperatorDivide(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '/');
+    }
+
+    isOperatorPlus(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '+');
+    }
+    isOperatorMinus(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '-');
+    }
+
+    isNumberLiteral(token) {
+        return (token.tokenType === 'NUMBERLITERAL');
+    }
+
+    peekToken() {
+        if (this.nextTokenPosition > this.maxTokenPosition) {
+            return this.tokens[this.maxTokenPosition];
+        } else {
+            return this.tokens[this.nextTokenPosition];
+        }
+    }
+
+    consumeToken() {
+        this.nextTokenPosition = this.nextTokenPosition + 1;
     }
 
 }

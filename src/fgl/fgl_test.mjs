@@ -1,4 +1,4 @@
-import {Scanner} from './fgl.mjs';
+import { Scanner, Parser } from './fgl.mjs';
 
 /*
  * Identifiers
@@ -118,6 +118,7 @@ function testRealScan() {
     assertToken('STRINGLITERAL','"SMALLER"',tokens[21]);
     assertToken('WHITESPACE',' ',tokens[22]);
     assertToken('PUNCTUATION',';',tokens[23]);
+    assertToken('EOF','$',tokens[24]);
 
 }
 
@@ -127,16 +128,64 @@ function assertToken(typeName, lexxem, token) {
         console.log('OK token >' + token.tokenType + ',' + token.lexxem + '<');
     } else {
         console.log('ERROR token >' + token.tokenType + ',' + token.lexxem + '<');
+        throw new Error('ERROR token >' + token.tokenType + ',' + token.lexxem + '<');
     }
 }
+
+/*
+ * Parsing
+ */
+function testFactor() {
+    const scanner = new Scanner('3 * 4 / 2');
+    const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
+    console.log(tokens);
+    const parser = new Parser(tokens);
+    const ast = parser.factor();
+    console.log(ast);
+}
+
+function testTerm() {
+    const scanner = new Scanner('3 + 2');
+    const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
+    console.log(tokens);
+    const parser = new Parser(tokens);
+    const ast = parser.term();
+    console.log(ast);
+}
+
+function testTermAfter() {
+    const scanner = new Scanner('3 * 4 + 2');
+    const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
+    console.log(tokens);
+    const parser = new Parser(tokens);
+    const ast = parser.term();
+    console.log(ast);
+}
+
+function testTermBefore() {
+    const scanner = new Scanner('3 + 4 * 2');
+    const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
+    console.log(tokens);
+    const parser = new Parser(tokens);
+    const ast = parser.term();
+    console.log(ast);
+}
+
 /*
  * All Tests
  */
 
 try {
+
     testIdentifierSuite();
     testNumberSuite();
     testRealScan();
+
+    testFactor();
+    testTerm();
+    testTermAfter();
+    testTermBefore();
+
 } catch (exception) {
     console.log(exception);
 }
