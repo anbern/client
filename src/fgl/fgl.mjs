@@ -11,6 +11,8 @@ export class Scanner {
         this.lineNumber               = 0;
         this.positionInLine           = 0;
         this.tokenStartPositionInLine = 0;
+
+        this.breakStringLiteral       = false;
     }
 
     scan() {
@@ -22,9 +24,12 @@ export class Scanner {
             if (this.isWhitespace(peekedCharacter)) {
                 tokenType = 'WHITESPACE';
                 scannedString = this.scanWhitespace();
+            } else if (this.isQuotationMark(peekedCharacter)) {
+                tokenType = 'STRINGLITERAL';
+                scannedString = this.scanStringLiteral();
             } else if (this.isNumber(peekedCharacter)) {
-                tokenType = 'NUMBER';
-                scannedString = this.scanNumber();
+                tokenType = 'NUMBERLITERAL';
+                scannedString = this.scanNumberLiteral();
             } else if (this.isBracket(peekedCharacter)) {
                 tokenType = 'BRACKET';
                 scannedString = this.scanBracket();
@@ -72,11 +77,28 @@ export class Scanner {
         return this.scanSomething(character => !this.isWhitespace(character));
     }
 
+    scanStringLiteral() {
+        return this.scanSomething(character => {
+            if (this.isQuotationMark(character)) {
+                //the string stops here, include the closing quotation mark
+                //break at position AFTER closing quotation mark
+                this.breakStringLiteral = true;
+                return false;
+            } else {
+                if (this.breakStringLiteral) {
+                    this.breakStringLiteral = false;
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
     scanKeywordOrIdentifier() {
         return this.scanSomething(this.terminatesIdentifierKeywordNumber.bind(this));
     }
 
-    scanNumber() {
+    scanNumberLiteral() {
         return this.scanSomething(character =>
             !this.isNumber(character));
     }
@@ -152,6 +174,12 @@ export class Scanner {
           character === ':' ||
           character === '!' ||
           character === '?'
+        );
+    }
+
+    isQuotationMark(character) {
+        return (
+          character === '"'
         );
     }
     isNumber(character) {

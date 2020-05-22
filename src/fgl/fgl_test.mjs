@@ -51,28 +51,28 @@ function testIdentifierSuite() {
  */
 function testNumber1() {
     const scanner = new Scanner('1');
-    const scannerResult = scanner.scanNumber();
+    const scannerResult = scanner.scanNumberLiteral();
     console.log('scannerResult = >' + scannerResult + '<');
     if (scannerResult !== '1') throw new Error('testNumber1 failed');
 }
 
 function testNumber10() {
     const scanner = new Scanner('10');
-    const scannerResult = scanner.scanNumber();
+    const scannerResult = scanner.scanNumberLiteral();
     console.log('scannerResult = >' + scannerResult + '<');
     if (scannerResult !== '10') throw new Error('testNumber10 failed');
 }
 
 function testNumber9Dot9() {
     const scanner = new Scanner('9.9');
-    const scannerResult = scanner.scanNumber();
+    const scannerResult = scanner.scanNumberLiteral();
     console.log('scannerResult = >' + scannerResult + '<');
     if (scannerResult !== '9') throw new Error('testNumber9Dot9 failed');
 }
 
 function testNumber99Comma9() {
     const scanner = new Scanner('99,9');
-    const scannerResult = scanner.scanNumber();
+    const scannerResult = scanner.scanNumberLiteral();
     console.log('scannerResult = >' + scannerResult + '<');
     if (scannerResult !== '99') throw new Error('testNumber99Comma9 failed');
 }
@@ -89,7 +89,7 @@ function testNumberSuite() {
  */
 
 function testRealScan() {
-    const scanner = new Scanner ('if (x > 0) then\n\tprint GREATER\nelse\n\tprint SMALLER;');
+    const scanner = new Scanner ('if (x > 0) then\n\tprint "GREATER"; \nelse\n\tprint "SMALLER" ;');
     const tokens  = scanner.scan();
     console.log(tokens);
     assertToken('KEYWORD','if',tokens[0]);
