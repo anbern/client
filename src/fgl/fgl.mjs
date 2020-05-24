@@ -310,6 +310,106 @@ export class Parser {
         }
     }
 
+    //comparison => term comparisonRest
+    //comparisonRest => ('<'|'<='|'=='|'!='|'>='|'>') comparison
+    //          | €
+
+    comparison() {
+        const firstTerm = this.term();
+        const comparisonRest = this.comparisonRest();
+        if (comparisonRest === null) {
+            return firstTerm;
+        } else {
+            const opNode = new OpNode('COMPARISON', comparisonRest.opCode);
+            opNode.addChild(firstTerm);
+            opNode.addChild(comparisonRest.comparison);
+            return opNode;
+        }
+    }
+
+    comparisonRest() {
+        const nextToken = this.peekToken();
+        if (this.isOperatorLessThan(nextToken) ||
+            this.isOperatorLessEqual(nextToken) ||
+            this.isOperatorEqual(nextToken) ||
+            this.isOperatorNotEqual(nextToken) ||
+            this.isOperatorGreaterEqual(nextToken) ||
+            this.isOperatorGreaterThan(nextToken)) {
+            this.consumeToken();
+            const nextComparison = this.comparison();
+            return ({
+                opCode: nextToken,
+                comparison: nextComparison
+            });
+        } else {
+            //€ - epsiolon
+            return null;
+        }
+    }
+
+    //bool => comparison boolRest
+    //boolRest => ('&&'|'||') bool
+    //          | €
+
+    bool() {
+        const firstComparison = this.comparison();
+        const boolRest = this.boolRest();
+        if (boolRest === null) {
+            return firstComparison;
+        } else {
+            const opNode = new OpNode('BOOL', boolRest.opCode);
+            opNode.addChild(firstComparison);
+            opNode.addChild(boolRest.bool);
+            return opNode;
+        }
+    }
+
+    boolRest() {
+        const nextToken = this.peekToken();
+        if (this.isOperatorAnd(nextToken) ||
+            this.isOperatorOr(nextToken)) {
+            this.consumeToken();
+            const nextBool = this.bool();
+            return ({
+                opCode: nextToken,
+                bool: nextBool
+            });
+        } else {
+            //€ - epsiolon
+            return null;
+        }
+    }
+
+    /*
+     * supporting functions
+     */
+
+    isOperatorAnd(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '&&');
+    }
+    isOperatorOr(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '||');
+    }
+
+    isOperatorLessThan(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '<');
+    }
+    isOperatorLessEqual(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '<=');
+    }
+    isOperatorEqual(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '==');
+    }
+    isOperatorNotEqual(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '!=');
+    }
+    isOperatorGreaterEqual(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '>=');
+    }
+    isOperatorGreaterThan(token) {
+        return (token.tokenType === 'IDENTIFIER' && token.lexxem === '>');
+    }
+
     isOperatorTimes(token) {
         return (token.tokenType === 'IDENTIFIER' && token.lexxem === '*');
     }

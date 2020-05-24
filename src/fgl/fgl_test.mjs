@@ -171,12 +171,42 @@ function testTermBefore() {
     console.log(ast);
 }
 
+function testComparison() {
+    const scanner = new Scanner ('3 >= 11');
+    const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
+    //console.log(tokens);
+    const parser = new Parser(tokens);
+    const ast = parser.comparison();
+    logAstNode(ast);
+}
+function testBool() {
+    const scanner = new Scanner ('3 > 1 && 2 > 3');
+    const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
+    //console.log(tokens);
+    const parser = new Parser(tokens);
+    const ast = parser.bool();
+    logAstNode(ast,0);
+}
+
+/*
+ * Support
+ */
+function logAstNode(astNode,level) {
+
+    (astNode.tokenType && console.log(level + '\tToken Type ' + astNode.tokenType));
+    (astNode.tokenType && astNode.lexxem && console.log(level + '\tToken lexxem ' + astNode.lexxem));
+
+    (astNode.nodeType && console.log(level + '\tNode Type ' + astNode.nodeType));
+    (astNode.opCode && astNode.opCode.lexxem && console.log(level + '\tNode lexxem ' + astNode.opCode.lexxem));
+    (astNode.children && astNode.children.forEach(childNode => logAstNode(childNode, level + 1)));
+}
+
 /*
  * All Tests
  */
 
 try {
-
+/*
     testIdentifierSuite();
     testNumberSuite();
     testRealScan();
@@ -185,6 +215,9 @@ try {
     testTerm();
     testTermAfter();
     testTermBefore();
+*/
+    testComparison();
+    testBool();
 
 } catch (exception) {
     console.log(exception);
