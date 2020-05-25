@@ -1,15 +1,20 @@
-import { Scanner, Parser } from './fgl.mjs';
+import { Scanner, Parser } from './fgl';
 
 /*
  * Identifiers
  */
-function testIdentifier() {
+
+test('reads vanilla identifier', ()=> {
     const scanner = new Scanner('IamATest');
+    expect(scanner.scanKeywordOrIdentifier()).toBe('IamATest');
+    /*
     const scannerResult = scanner.scanKeywordOrIdentifier();
     console.log('scannerResult = >' + scannerResult + '<');
     if (scannerResult !== 'IamATest') throw new Error('testIdentifer failed');
-}
+    */
 
+});
+/*
 function testIdentifierWS() {
     const scanner = new Scanner('IamATestWithWhitespace ');
     const scannerResult = scanner.scanKeywordOrIdentifier();
@@ -46,9 +51,9 @@ function testIdentifierSuite() {
     testStrangeIdentifier();
 }
 
-/*
+ *
  * Numbers
- */
+ *
 function testNumber1() {
     const scanner = new Scanner('1');
     const scannerResult = scanner.scanNumberLiteral();
@@ -86,7 +91,7 @@ function testNumberSuite() {
 
 /*
  * Real Scan
- */
+ *
 
 function testRealScan() {
     const scanner = new Scanner ('if (x > 0) then\n\tprint "GREATER"; \nelse\n\tprint "SMALLER" ;');
@@ -134,7 +139,7 @@ function assertToken(typeName, lexxem, token) {
 
 /*
  * Parsing
- */
+ *
 function testFactor() {
     const scanner = new Scanner('3 * 4 / 2');
     const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
@@ -190,7 +195,7 @@ function testBool() {
 
 /*
  * Support
- */
+ *
 function logAstNode(astNode,level) {
 
     (astNode.tokenType && console.log(level + '\tToken Type ' + astNode.tokenType));
@@ -203,7 +208,7 @@ function logAstNode(astNode,level) {
 
 /*
  * All Tests
- */
+ *
 
 try {
 /*
@@ -215,13 +220,11 @@ try {
     testTerm();
     testTermAfter();
     testTermBefore();
-*/
+*
     testComparison();
     testBool();
 
 } catch (exception) {
     console.log(exception);
 }
-
-
-
+*/
