@@ -14,35 +14,31 @@ test('reads vanilla identifier', ()=> {
     */
 
 });
-/*
-function testIdentifierWS() {
+
+test('identifier with whitespace delimiter', () => {
     const scanner = new Scanner('IamATestWithWhitespace ');
     const scannerResult = scanner.scanKeywordOrIdentifier();
-    console.log('scannerResult = >' + scannerResult + '<');
-    if (scannerResult !== 'IamATestWithWhitespace') throw new Error('testIdentiferWS failed');
-}
+    expect(scannerResult).toBe('IamATestWithWhitespace');
+});
 
-function testIdentifierBracket() {
+test('identifier delimited by bracket', () => {
     const scanner = new Scanner('IamATestWithBracket[]');
     const scannerResult = scanner.scanKeywordOrIdentifier();
-    console.log('scannerResult = >' + scannerResult + '<');
-    if (scannerResult !== 'IamATestWithBracket') throw new Error('testIdentiferBracket failed');
-}
+    expect(scannerResult).toBe('IamATestWithBracket');
+});
 
-function testIdentifierDot() {
+test('identifier with dot delimiter', () => {
     const scanner = new Scanner('IamATestWithADot.com');
     const scannerResult = scanner.scanKeywordOrIdentifier();
-    console.log('scannerResult = >' + scannerResult + '<');
-    if (scannerResult !== 'IamATestWithADot') throw new Error('testIdentiferDot failed');
-}
+    expect(scannerResult).toBe('IamATestWithADot');
+});
 
-function testStrangeIdentifier() {
+test('strange identifier test', () => {
     const scanner = new Scanner('<=#=> (FacingPropellerAircraftOperator)');
     const scannerResult = scanner.scanKeywordOrIdentifier();
-    console.log('scannerResult = >' + scannerResult + '<');
-    if (scannerResult !== '<=#=>') throw new Error('testStrangeIdentifier failed');
-}
-
+    expect(scannerResult).toBe('<=#=>');
+});
+/*
 function testIdentifierSuite() {
     testIdentifier();
     testIdentifierWS();
@@ -50,50 +46,41 @@ function testIdentifierSuite() {
     testIdentifierDot();
     testStrangeIdentifier();
 }
+*/
 
- *
+/*
  * Numbers
- *
-function testNumber1() {
+ */
+
+test('test number 1', () => {
     const scanner = new Scanner('1');
     const scannerResult = scanner.scanNumberLiteral();
-    console.log('scannerResult = >' + scannerResult + '<');
-    if (scannerResult !== '1') throw new Error('testNumber1 failed');
-}
+    expect(scannerResult).toBe('1');
+});
 
-function testNumber10() {
+test('test number 10', () => {
     const scanner = new Scanner('10');
     const scannerResult = scanner.scanNumberLiteral();
-    console.log('scannerResult = >' + scannerResult + '<');
-    if (scannerResult !== '10') throw new Error('testNumber10 failed');
-}
+    expect(scannerResult).toBe('10');
+});
 
-function testNumber9Dot9() {
+test('test number 9.9', ()=>{
     const scanner = new Scanner('9.9');
     const scannerResult = scanner.scanNumberLiteral();
-    console.log('scannerResult = >' + scannerResult + '<');
-    if (scannerResult !== '9') throw new Error('testNumber9Dot9 failed');
-}
+    expect(scannerResult).toBe('9');
+});
 
-function testNumber99Comma9() {
+test('test number 99,9', () => {
     const scanner = new Scanner('99,9');
     const scannerResult = scanner.scanNumberLiteral();
-    console.log('scannerResult = >' + scannerResult + '<');
-    if (scannerResult !== '99') throw new Error('testNumber99Comma9 failed');
-}
-
-function testNumberSuite() {
-    testNumber1();
-    testNumber10();
-    testNumber9Dot9();
-    testNumber99Comma9();
-}
+    expect(scannerResult).toBe('99');
+});
 
 /*
  * Real Scan
- *
+ */
 
-function testRealScan() {
+test('real scanning',() => {
     const scanner = new Scanner ('if (x > 0) then\n\tprint "GREATER"; \nelse\n\tprint "SMALLER" ;');
     const tokens  = scanner.scan();
 
@@ -125,85 +112,88 @@ function testRealScan() {
     assertToken('PUNCTUATION',';',tokens[23]);
     assertToken('EOF','$',tokens[24]);
 
-}
+});
 
 function assertToken(typeName, lexxem, token) {
     if (token.tokenType === typeName &&
         token.lexxem === lexxem) {
-        console.log('OK token >' + token.tokenType + ',' + token.lexxem + '<');
+        //console.log('OK token >' + token.tokenType + ',' + token.lexxem + '<');
     } else {
-        console.log('ERROR token >' + token.tokenType + ',' + token.lexxem + '<');
+        //console.log('ERROR token >' + token.tokenType + ',' + token.lexxem + '<');
         throw new Error('ERROR token >' + token.tokenType + ',' + token.lexxem + '<');
     }
 }
 
 /*
  * Parsing
- *
-function testFactor() {
+ */
+
+test('factor', () => {
     const scanner = new Scanner('3 * 4 / 2');
     const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
-    console.log(tokens);
+    //console.log(tokens);
     const parser = new Parser(tokens);
     const ast = parser.factor();
-    console.log(ast);
-}
+    //console.log(ast);
+});
 
-function testTerm() {
+test('term', () => {
     const scanner = new Scanner('3 + 2');
     const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
-    console.log(tokens);
+    //console.log(tokens);
     const parser = new Parser(tokens);
     const ast = parser.term();
-    console.log(ast);
-}
+    //console.log(ast);
+});
 
-function testTermAfter() {
+test('term after', () => {
     const scanner = new Scanner('3 * 4 + 2');
     const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
-    console.log(tokens);
+    //console.log(tokens);
     const parser = new Parser(tokens);
     const ast = parser.term();
-    console.log(ast);
-}
+    //console.log(ast);
+});
 
-function testTermBefore() {
+test ('term before', () => {
     const scanner = new Scanner('3 + 4 * 2');
     const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
-    console.log(tokens);
+    //console.log(tokens);
     const parser = new Parser(tokens);
     const ast = parser.term();
-    console.log(ast);
-}
+    //console.log(ast);
+});
 
-function testComparison() {
+test('comparison', () => {
     const scanner = new Scanner ('3 >= 11');
     const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
     //console.log(tokens);
     const parser = new Parser(tokens);
     const ast = parser.comparison();
     logAstNode(ast);
-}
-function testBool() {
+});
+
+test('bool', () => {
     const scanner = new Scanner ('3 > 1 && 2 > 3');
     const tokens = scanner.scan().filter(token => token.tokenType !== 'WHITESPACE');
     //console.log(tokens);
     const parser = new Parser(tokens);
     const ast = parser.bool();
     logAstNode(ast,0);
-}
+});
 
 /*
- * Support
- *
+ * Parse Test Support
+ */
 function logAstNode(astNode,level) {
-
+/*
     (astNode.tokenType && console.log(level + '\tToken Type ' + astNode.tokenType));
     (astNode.tokenType && astNode.lexxem && console.log(level + '\tToken lexxem ' + astNode.lexxem));
 
     (astNode.nodeType && console.log(level + '\tNode Type ' + astNode.nodeType));
     (astNode.opCode && astNode.opCode.lexxem && console.log(level + '\tNode lexxem ' + astNode.opCode.lexxem));
     (astNode.children && astNode.children.forEach(childNode => logAstNode(childNode, level + 1)));
+ */
 }
 
 /*
