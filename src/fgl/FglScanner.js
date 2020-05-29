@@ -57,6 +57,7 @@ const ScannedCharacters = {
 
     isPunctuation(character) {
         return (
+            character === ',' ||
             character === '.' ||
             character === ';' ||
             character === ':' ||
@@ -92,9 +93,11 @@ const ScannedCharacters = {
 
 class Scanner {
     constructor(sourceString) {
+        /*
         if (!sourceString || (sourceString && sourceString === '')) {
             throw new Error('Source must be non-emtpy String');
         }
+         */
 
         this.sourceString = sourceString;
         this.maxPosition  = sourceString.length - 1;
@@ -137,8 +140,21 @@ class Scanner {
             }
             this.pushToken(tokenType,scannedString);
         }
+        //adjust EOF position - "scanEOF()"
+        this.tokenStartPosition = this.position;
+        this.tokenStartPositionInLine = this.positionInLine;
+
+        this.position = this.position + 1;
+        this.positionInLine = this.positionInLine + 1;
         this.pushToken(TokenType.EOF,TokenType.EOF);
+        this.positionInLine = this.positionInLine - 1;
+        this.position = this.position - 1;
+
         return this.tokens;
+    }
+
+    scanNoWhitespace() {
+        return this.scan().filter(token => token.tokenType !== TokenType.WHITESPACE);
     }
 
     pushToken(tokenType, lexxem) {
@@ -161,13 +177,13 @@ class Scanner {
 
     getTokenType(lexxem) {
         switch(lexxem) {
+            case 'true':
+            case 'false':
+                return TokenType.BOOLEANLITERAL;
             case 'if':
-            case 'then':
             case 'else':
-            case 'do':
             case 'while':
             case 'until':
-            case 'end':
                 return TokenType.KEYWORD;
             default:
                 return TokenType.IDENTIFIER;
@@ -257,7 +273,7 @@ class Scanner {
     }
 }
 
-export function scan(module) {
+export function Scan(module) {
     const source    = module.source;
     const scanner   = new Scanner(source);
     const tokens    = scanner.scan();
