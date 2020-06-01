@@ -1,5 +1,5 @@
 
-class SourceCodeReference {
+export class SourceCodeReference {
     constructor(module,
                 startPosition, endPosition,
                 startLineNumber, endLineNumber,
@@ -33,6 +33,17 @@ export class Token {
         this.lexxem              = lexxem;
         this.sourceCodeReference = sourceCodeReference;
     }
+
+    isEOF()             { return this.tokenType === TokenType.EOF; }
+    isIdentifier()      { return this.tokenType === TokenType.IDENTIFIER; }
+    isKeyword()         { return this.tokenType === TokenType.KEYWORD; }
+    isBracket()         { return this.tokenType === TokenType.BRACKET; }
+    isPunctuation()     { return this.tokenType === TokenType.PUNCTUATION; }
+    isWhitespace()      { return this.tokenType === TokenType.WHITESPACE; }
+    isStringLiteral()   { return this.tokenType === TokenType.STRINGLITERAL; }
+    isNumberLiteral()   { return this.tokenType === TokenType.NUMBERLITERAL; }
+    isBooleanLiteral()  { return this.tokenType === TokenType.BOOLEANLITERAL; }
+
 
 }
 const ScannedCharacters = {
