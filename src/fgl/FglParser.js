@@ -1,8 +1,8 @@
 import { Token, SourceCodeReference } from './FglScanner';
 
-const knownFunctionIdentifiers = [
-  ['*','/']
-];
+const Runtime = {
+    knownFunctionIdentifiers: ['*', '/']
+};
 
 class AstNode {}
 
@@ -11,9 +11,14 @@ class ParentAstNode extends AstNode {
         super();
         this.children = [];
     }
+
+    //ALMOST immutable ;-)
+    addChild(child) {
+        this.children.push(child);
+    }
 }
 
-class FunctionInvocationNode extends ParentAstNode {
+export class FunctionInvocationNode extends ParentAstNode {
     constructor(identifier) {
         super();
         this.identifier = identifier;
@@ -27,7 +32,7 @@ class LiteralNode extends AstNode {
     }
 }
 
-class NumberLiteralNode extends LiteralNode {
+export class NumberLiteralNode extends LiteralNode {
     constructor(token) {
         super(token);
     }
@@ -37,7 +42,8 @@ class NumberLiteralNode extends LiteralNode {
 class Parser {
     constructor(tokens) {
         this.tokens = tokens;
-        this.currentPosition = 0;
+        //before begin
+        this.currentPosition = -1;
         this.maxPosition = tokens.length - 1;
     }
 
@@ -52,13 +58,14 @@ class Parser {
         );
         functionInvocationNode.addChild(numberLiteralNode);
         functionInvocationNode.addChild(infixFunctionInvocationRest.rightSide);
+        return functionInvocationNode;
     }
 
     parseInfixFunctionInvocationRest() {
         const operatorToken = this.peek();
         if (!operatorToken.isIdentifier() ||
             (   //operatorToken.isIdentifier &&
-                !this.knownFunctionIdentifiers.includes(operatorToken.lexxem))) {
+                !Runtime.knownFunctionIdentifiers.includes(operatorToken.lexxem))) {
             return null;
         }
 
@@ -95,5 +102,10 @@ class Parser {
             this.currentPosition = this.currentPosition + 1;
         }
     }
+}
+
+export function Parse(tokens) {
+    const parser = new Parser(tokens);
+    return parser.parseInfixFunctionInvocation();
 }
 

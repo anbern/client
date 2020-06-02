@@ -164,10 +164,6 @@ class Scanner {
         return this.tokens;
     }
 
-    scanNoWhitespace() {
-        return this.scan().filter(token => token.tokenType !== TokenType.WHITESPACE);
-    }
-
     pushToken(tokenType, lexxem) {
         const sourceCodeReference = this.createSourceCodeReference();
         const newToken = new Token(tokenType, lexxem, sourceCodeReference);
@@ -289,4 +285,9 @@ export function Scan(module) {
     const scanner   = new Scanner(source);
     const tokens    = scanner.scan();
     return tokens;
+}
+
+export function ScanNoWhitespace(module) {
+    const tokens = Scan(module);
+    return tokens.filter(token => !token.isWhitespace());
 }
