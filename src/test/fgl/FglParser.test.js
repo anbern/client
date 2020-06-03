@@ -1,6 +1,6 @@
-import { ScanNoWhitespace, Token } from './FglScanner';
-import { FunctionInvocationNode, NumberLiteralNode } from './FglAst';
-import { Parse } from './FglParser';
+import { ScanNoWhitespace } from '../../main/fgl/FglScanner';
+//import { FunctionInvocationNode, NumberLiteralNode } from '../../main/fgl/FglAst';
+import { Parse } from '../../main/fgl/FglParser';
 
 test('simple number literal',() => {
     const tokens = ScanNoWhitespace({ source: '1'} );
@@ -104,6 +104,7 @@ test('complex infix',() => {
     const ast = Parse(tokens);
     //console.log('complex infix 2*3 > 5 & 4-1 ^= 2 test: ast=');
     //printAstNode(0,ast);
+    console.log(ast);
 })
 /*
  * Helper Functions

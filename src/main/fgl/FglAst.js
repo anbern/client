@@ -30,5 +30,10 @@ class LiteralNode extends AstNode {
 export class NumberLiteralNode extends LiteralNode {
     constructor(token) {
         super(token);
+        this.value = parseInt(token.lexxem,10);
+        if (isNaN(this.value)) {
+            throw new Error('Invalid 10 baseed number lexxem: ' + token.lexxem);
+        }
     }
+
 }

@@ -1,4 +1,4 @@
-import { Scan, TokenType } from './FglScanner';
+import { Scan, TokenType } from '../../main/fgl/FglScanner';
 
 const mockModule = {};
 

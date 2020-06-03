@@ -283,8 +283,7 @@ class Scanner {
 export function Scan(module) {
     const source    = module.source;
     const scanner   = new Scanner(source);
-    const tokens    = scanner.scan();
-    return tokens;
+    return scanner.scan();
 }
 
 export function ScanNoWhitespace(module) {
