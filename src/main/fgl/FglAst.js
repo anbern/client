@@ -13,6 +13,9 @@ class ParentAstNode extends AstNode {
     }
 }
 
+export class QIdentifierNode extends ParentAstNode {
+}
+
 export class FunctionInvocationNode extends ParentAstNode {
     constructor(identifier) {
         super();
@@ -35,5 +38,23 @@ export class NumberLiteralNode extends LiteralNode {
             throw new Error('Invalid 10 baseed number lexxem: ' + token.lexxem);
         }
     }
+}
 
+export class StringLiteralNode extends LiteralNode {
+    constructor(token) {
+        super(token);
+        //remove the leading and trailing "
+        this.value = token.lexxem.slice(1,-1);
+    }
+}
+
+export class BooleanLiteralNode extends LiteralNode {
+    constructor(token) {
+        super(token);
+        if (token.lexxem === 'true') {
+            this.value = true;
+        } else if (token.lexxem === 'false') {
+            this.value = false;
+        }
+    }
 }

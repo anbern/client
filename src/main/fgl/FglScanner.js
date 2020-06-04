@@ -43,6 +43,7 @@ export class Token {
     isStringLiteral()   { return this.tokenType === TokenType.STRINGLITERAL; }
     isNumberLiteral()   { return this.tokenType === TokenType.NUMBERLITERAL; }
     isBooleanLiteral()  { return this.tokenType === TokenType.BOOLEANLITERAL; }
+    is(aString)         { return this.lexxem    === aString; }
 
 
 }

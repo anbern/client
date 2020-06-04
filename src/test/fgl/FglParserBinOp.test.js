@@ -1,23 +1,12 @@
 import { ScanNoWhitespace } from '../../main/fgl/FglScanner';
 import { Parse } from '../../main/fgl/FglParser';
 
-test('simple number literal',() => {
-    const tokens = ScanNoWhitespace({ source: '1'} );
-    expect(tokens).toHaveLength(2);
-    const ast = Parse(tokens);
-    expect(ast).toMatchObject({
-       token: {
-           lexxem: '1'
-       }
-    });
-
-})
 
 test('simple multiplication',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3'} );
     expect(tokens).toHaveLength(4); //including EOF
     const ast = Parse(tokens);
-    const expected = {
+    expectAst(ast).toMatch({
         identifier: '*',
         leftSide: {
             number: '2'
@@ -25,15 +14,14 @@ test('simple multiplication',() => {
         rightSide: {
             number: '3'
         }
-    };
-    matchTree(ast,expected);
-})
+    });
+});
 
 test('combined multiplication / division ',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3 / 4'} );
     expect(tokens).toHaveLength(6); //including EOF
     const ast = Parse(tokens);
-    const expected = {
+    expectAst(ast).toMatch({
         identifier: '*',
         leftSide: {
             number: '2'
@@ -47,16 +35,14 @@ test('combined multiplication / division ',() => {
                 number: '4'
             }
         }
-    };
-    matchTree(ast,expected);
-
-})
+    });
+});
 
 test('combined addition and multiplication (* rechts)',() => {
     const tokens = ScanNoWhitespace({ source: '2 + 3 * 4'} );
-    expect(tokens.length).toBe(6); //including EOF
+    expect(tokens).toHaveLength(6); //including EOF
     const ast = Parse(tokens);
-    const expected = {
+    expectAst(ast).toMatch({
         identifier: '+',
         leftSide: {
             number: '2'
@@ -70,76 +56,105 @@ test('combined addition and multiplication (* rechts)',() => {
                 number: '4'
             }
         }
-    };
-    matchTree(ast,expected)
+    });
 })
 
 test('combined addition and multiplication (+ rechts)',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3 + 4'} );
-    expect(tokens.length).toBe(6); //including EOF
+    expect(tokens).toHaveLength(6); //including EOF
     const ast = Parse(tokens);
-    const expected = {
-      identifier: '+',
-      leftSide: {
-          identifier: '*',
-          leftSide: {
-              number: '2'
-          },
-          rightSide: {
-              number: '3'
-          }
-      },
-      rightSide: {
-          number: '4'
-      }
-    };
-    matchTree(ast,expected);
-})
-
+    expectAst(ast).toMatch({
+        identifier: '+',
+        leftSide: {
+            identifier: '*',
+            leftSide: {
+                number: '2'
+            },
+            rightSide: {
+                number: '3'
+            }
+        },
+        rightSide: {
+            number: '4'
+        }
+    });
+});
 test('complex infix',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3 > 5 & 4 - 1 ^= 2'} );
-    expect(tokens.length).toBe(12); //including EOF
+    expect(tokens).toHaveLength(12); //including EOF
     const ast = Parse(tokens);
+
     const expected = {
         identifier: '&',
         leftSide: {
             identifier: '>',
             leftSide: {
                 identifier: '*',
-                leftSide: {
-                    number: '2'
-                },
-                rightSide: {
-                    number: '3'
-                }
+                leftSide:  { number: '2' },
+                rightSide: { number: '3' }
             },
-            rightSide: {
-                number: '5'
-            }
+            rightSide: { number: '5' }
         },
         rightSide: {
             identifier: '^=',
             leftSide: {
                 identifier: '-',
-                leftSide: {
-                    number: '4'
-                },
-                rightSide: {
-                    number: '1'
-                }
+                leftSide:  { number: '4' },
+                rightSide: { number: '1' }
             },
-            rightSide: {
-                number: '2'
-            }
+            rightSide: { number: '2'}
         }
-    }
-    matchTree(ast,expected);
+    };
 
-})
+    expectAst(ast).toMatch(expected);
+});
+
+test('complex infix',() => {
+    const tokens = ScanNoWhitespace({ source: '2 * 3 > 5 & 4 - 1 ^= 2'} );
+    expect(tokens).toHaveLength(12); //including EOF
+    const ast = Parse(tokens);
+
+    const expected = {
+        identifier: '&',
+        leftSide: {
+            identifier: '>',
+            leftSide: {
+                identifier: '*',
+                leftSide:  { number: '2' },
+                rightSide: { number: '3' }
+            },
+            rightSide: { number: '5' }
+        },
+        rightSide: {
+            identifier: '^=',
+            leftSide: {
+                identifier: '-',
+                leftSide:  { number: '4' },
+                rightSide: { number: '1' }
+            },
+            rightSide: { number: '2'}
+        }
+    };
+
+    expectAst(ast).toMatch(expected);
+});
 
 /*
  * Helper Functions
  */
+
+class AstExpecter {
+    constructor(ast) {
+        this.ast = ast;
+    }
+    toMatch(expected) {
+        matchTree(this.ast,expected);
+    }
+}
+
+function expectAst(ast) {
+    return new AstExpecter(ast);
+}
 
 function matchTree(ast,expected) {
     if (expected.identifier) {

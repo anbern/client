@@ -1,7 +1,8 @@
-import { FunctionInvocationNode, NumberLiteralNode } from './FglAst';
+import {
+    FunctionInvocationNode,
+    NumberLiteralNode, StringLiteralNode, BooleanLiteralNode } from './FglAst';
 
 const Runtime = {
-    knownFunctionIdentifiers: ['*', '/'],
     knownFunctionIdentifiersLevels: [
         ['*','/'],
         ['+', '-'],
@@ -21,7 +22,7 @@ class Parser {
     parseInfixFunctionInvocationLevel(level) {
         const leftNode = (level >= 0 ? this.parseInfixFunctionInvocationLevel(level -1 )
                                       //end of prioritized binary operators
-                                      : this.parseNumberLiteral());
+                                      : this.parseLowLevelExpressionElement());
         if (level === -1) {
             return leftNode;
         }
@@ -55,11 +56,49 @@ class Parser {
         };
     }
 
+    parseLowLevelExpressionElement() {
+        const nextToken = this.peek();
+        if (nextToken.isNumberLiteral()) {
+            return this.parseNumberLiteral();
+        } else if (nextToken.isStringLiteral()) {
+            return this.parseStringLiteral();
+        } else if (nextToken.isBooleanLiteral()) {
+            return this.parseBooleanLiteral();
+        } else if (nextToken.is('(')) {
+            this.consumeToken();
+            const expression = this.parseInfixFunctionInvocationLevel(3);
+            const peekedToken = this.peek();
+            if (peekedToken.is(')')) {
+                this.consumeToken();
+            } else {
+                throw new Error('Missing (');
+            }
+            return expression;
+        }
+    }
+
     parseNumberLiteral() {
         const nextToken = this.peek();
         if (nextToken.isNumberLiteral()) {
             this.consumeToken();
             return new NumberLiteralNode(nextToken);
+        }
+        return null;
+    }
+
+    parseStringLiteral() {
+        const nextToken = this.peek();
+        if (nextToken.isStringLiteral()) {
+            this.consumeToken();
+            return new StringLiteralNode(nextToken);
+        }
+        return null;
+    }
+    parseBooleanLiteral() {
+        const nextToken = this.peek();
+        if (nextToken.isBooleanLiteral()) {
+            this.consumeToken();
+            return new BooleanLiteralNode(nextToken);
         }
         return null;
     }
