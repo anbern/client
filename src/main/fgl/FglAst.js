@@ -12,6 +12,31 @@ class ParentAstNode extends AstNode {
         this.children.push(child);
     }
 }
+export class BlockStatementNode extends ParentAstNode {
+}
+export class AssignmentStatementNode extends ParentAstNode {
+}
+export class IfStatementNode extends ParentAstNode {
+    constructor(ifExpression) {
+        super();
+        this.ifExpression = ifExpression;
+    }
+}
+export class WhileStatementNode extends ParentAstNode {
+    constructor(whileExpression) {
+        super();
+        this.whileExpression = whileExpression;
+    }
+}
+export class UntilStatementNode extends ParentAstNode {
+    constructor(untilExpression) {
+        super();
+        this.untilExpression = untilExpression;
+    }
+}
+
+export class EmptyStatementNode extends AstNode {
+}
 
 export class QIdentifierNode extends ParentAstNode {
 }

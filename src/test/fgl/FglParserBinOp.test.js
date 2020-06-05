@@ -1,12 +1,12 @@
 import { ScanNoWhitespace } from '../../main/fgl/FglScanner';
-import { Parse } from '../../main/fgl/FglParser';
+import { ParseExpression } from '../../main/fgl/FglParser';
 import expectAst from './FglAstMatcher';
 
 
 test('simple multiplication',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3'} );
     expect(tokens).toHaveLength(4); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
         identifier: '*',
         leftSide: {
@@ -21,7 +21,7 @@ test('simple multiplication',() => {
 test('combined multiplication / division ',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3 / 4'} );
     expect(tokens).toHaveLength(6); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
         identifier: '*',
         leftSide: {
@@ -42,7 +42,7 @@ test('combined multiplication / division ',() => {
 test('combined addition and multiplication (* rechts)',() => {
     const tokens = ScanNoWhitespace({ source: '2 + 3 * 4'} );
     expect(tokens).toHaveLength(6); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
         identifier: '+',
         leftSide: {
@@ -63,7 +63,7 @@ test('combined addition and multiplication (* rechts)',() => {
 test('combined addition and multiplication (+ rechts)',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3 + 4'} );
     expect(tokens).toHaveLength(6); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
         identifier: '+',
         leftSide: {
@@ -83,7 +83,7 @@ test('combined addition and multiplication (+ rechts)',() => {
 test('complex infix',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3 > 5 & 4 - 1 ^= 2'} );
     expect(tokens).toHaveLength(12); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
 
     const expected = {
         identifier: '&',
@@ -113,7 +113,7 @@ test('complex infix',() => {
 test('complex infix',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3 > 5 & 4 - 1 ^= 2'} );
     expect(tokens).toHaveLength(12); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
 
     const expected = {
         identifier: '&',
@@ -143,7 +143,7 @@ test('complex infix',() => {
 test('parenthesis to right',() => {
     const tokens = ScanNoWhitespace({ source: '2 * ( 3 + 4 )'} );
     expect(tokens).toHaveLength(8); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
 
     const expected = {
         identifier: '*',
@@ -161,7 +161,7 @@ test('parenthesis to right',() => {
 test('parenthesis to left',() => {
     const tokens = ScanNoWhitespace({ source: '( 2 + 3 ) * 4'} );
     expect(tokens).toHaveLength(8); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
 
     const expected = {
         identifier: '*',
@@ -179,7 +179,7 @@ test('parenthesis to left',() => {
 test('simple qIdentifier expression left',() => {
     const tokens = ScanNoWhitespace({ source: 'i + 1'} );
     expect(tokens).toHaveLength(4); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
 
     const expected = {
         identifier: '+',
@@ -193,7 +193,7 @@ test('simple qIdentifier expression left',() => {
 test('simple qIdentifier expression right',() => {
     const tokens = ScanNoWhitespace({ source: '1 + i'} );
     expect(tokens).toHaveLength(4); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
 
     const expected = {
         identifier: '+',
@@ -207,7 +207,7 @@ test('simple qIdentifier expression right',() => {
 test('full qIdentifier expression left',() => {
     const tokens = ScanNoWhitespace({ source: 'person.year + 1'} );
     expect(tokens).toHaveLength(6); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
 
     const expected = {
         identifier: '+',
@@ -220,7 +220,7 @@ test('full qIdentifier expression left',() => {
 test('full qIdentifier expression right',() => {
     const tokens = ScanNoWhitespace({ source: '1 + person.year'} );
     expect(tokens).toHaveLength(6); //including EOF
-    const ast = Parse(tokens);
+    const ast = ParseExpression(tokens);
 
     const expected = {
         identifier: '+',

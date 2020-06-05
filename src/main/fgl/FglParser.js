@@ -1,6 +1,7 @@
 import {
-    FunctionInvocationNode,
-    QIdentifierNode,
+    EmptyStatementNode, BlockStatementNode, AssignmentStatementNode,
+    IfStatementNode, WhileStatementNode, UntilStatementNode,
+    FunctionInvocationNode, QIdentifierNode,
     NumberLiteralNode, StringLiteralNode, BooleanLiteralNode } from './FglAst';
 
 const Runtime = {
@@ -18,6 +19,116 @@ class Parser {
         //before begin
         this.currentPosition = -1;
         this.maxPosition = tokens.length - 1;
+    }
+
+    parseStatement() {
+        const nextToken = this.peek();
+        if (nextToken.is('{')) {
+            return this.parseBlockStatement();
+        } else if (nextToken.isIdentifier()) {
+            return this.parseAssignmentStatement();
+        } else if (nextToken.is('if')) {
+            return this.parseIfStatement();
+        } else if (nextToken.is('while')) {
+            return this.parseWhileStatement();
+        } else if (nextToken.is('do')) {
+            return this.parseDoUntilStatement();
+        } else if (nextToken.is(';')) {
+            return this.parseEmptyStatement();
+        }
+    }
+
+    parseBlockStatement() {
+        const nextToken = this.peek();
+        if (nextToken.is('{')) {
+            this.consumeToken();
+            const blockStatement = new BlockStatementNode();
+            while(this.peek() !== '}') {
+                const innerStatement = this.parseStatement();
+                blockStatement.addChild(innerStatement);
+            }
+            this.consumeToken();
+            return blockStatement;
+        }
+    }
+
+    parseAssignmentStatement() {
+        const nextToken = this.peek();
+        if (nextToken.isIdentifier()) {
+            const lvalue = this.parseQIdentifier();
+            const assignOperatorToken = this.peek();
+            if (!assignOperatorToken.is(':=')) {
+                throw new Error ('assign operator := expected');
+            }
+            this.consumeToken();
+            const rvalue = this.parseInfixFunctionInvocationLevel(3);
+            const newAssignmentStatementNode = new AssignmentStatementNode();
+            newAssignmentStatementNode.addChild(lvalue);
+            newAssignmentStatementNode.addChild(rvalue);
+            return newAssignmentStatementNode;
+        }
+        return null;
+    }
+
+    parseIfStatement() {
+        const ifToken = this.peek();
+        if (ifToken.is('if')) {
+            this.consumeToken();
+            const ifExpression = this.parseInfixFunctionInvocationLevel(3);
+            const ifBlock    = this.parseBlockStatement();
+            let   elseBlock;
+            const elseToken = this.peek();
+            if (elseToken.is('else')) {
+                this.consumeToken();
+                elseBlock = this.parseBlockStatement();
+            }
+            const ifStatement = new IfStatementNode(ifExpression);
+            ifStatement.addChild(ifBlock);
+            if (elseBlock) { ifStatement.addChild(elseBlock) }
+        }
+        return null;
+    }
+
+    parseWhileStatement() {
+        const nextToken = this.peek();
+        if (nextToken.is('while')) {
+            this.consumeToken();
+            const whileExpression = this.parseInfixFunctionInvocationLevel(3);
+            const whileBlock = this.parseBlockStatement();
+            const whileStatementNode = new WhileStatementNode(whileExpression);
+            whileStatementNode.addChild(whileBlock);
+            return whileStatementNode;
+        }
+        return null;
+    }
+
+    parseDoUntilStatement() {
+        const nextToken = this.peek();
+        if (nextToken.is('do')) {
+            this.consumeToken();
+            const doUntilBlock = this.parseBlockStatement();
+            const untilToken = this.peek();
+            if (!untilToken.is('until')) {
+                throw new Error('<until> expected');
+            }
+            this.consumeToken();
+            const untilExpression = this.parseInfixFunctionInvocationLevel(3);
+            const untilStatementNode = new UntilStatementNode(untilExpression);
+            untilStatementNode.addChild(doUntilBlock);
+            return untilStatementNode;
+        }
+        return null;
+    }
+
+
+
+    parseEmptyStatement() {
+        const nextToken = this.peek();
+        if (nextToken.is(';')) {
+            this.consumeToken();
+            return new EmptyStatementNode();
+        }
+        return null;
     }
 
     parseInfixFunctionInvocationLevel(level) {
@@ -165,8 +276,16 @@ class Parser {
     }
 }
 
-export function Parse(tokens) {
+/*
+ * Public API for Parser
+ */
+export function ParseExpression(tokens) {
     const parser = new Parser(tokens);
     return parser.parseInfixFunctionInvocationLevel(3);
+}
+
+export function ParseStatement(tokens) {
+    const parser = new Parser(tokens);
+    return parser.parseStatement();
 }
 
