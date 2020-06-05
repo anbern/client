@@ -1,5 +1,6 @@
 import { ScanNoWhitespace } from '../../main/fgl/FglScanner';
 import { Parse } from '../../main/fgl/FglParser';
+import expectAst from './FglAstMatcher';
 
 
 test('simple multiplication',() => {
@@ -139,38 +140,20 @@ test('complex infix',() => {
     expectAst(ast).toMatch(expected);
 });
 
-/*
- * Helper Functions
- */
+test('parenthesis',() => {
+    const tokens = ScanNoWhitespace({ source: '2 * ( 3 + 4 )'} );
+    expect(tokens).toHaveLength(8); //including EOF
+    const ast = Parse(tokens);
 
-class AstExpecter {
-    constructor(ast) {
-        this.ast = ast;
-    }
-    toMatch(expected) {
-        matchTree(this.ast,expected);
-    }
-}
+    const expected = {
+        identifier: '*',
+        leftSide:  { number: '2' },
+        rightSide: {
+            identifier: '+',
+            leftSide:  { number: '3' },
+            rightSide: { number: '4' }
+        }
+    };
 
-function expectAst(ast) {
-    return new AstExpecter(ast);
-}
-
-function matchTree(ast,expected) {
-    if (expected.identifier) {
-        matchBinOp(ast,expected);
-    } else if (expected.number) {
-        matchNumberLiteral(ast,expected);
-    }
-}
-function matchBinOp(ast,operator) {
-    expect(ast).toMatchObject({identifier:operator.identifier});
-    expect(ast.children).toHaveLength(2);
-    const leftSide = ast.children[0];
-    const rightSide = ast.children[1];
-    matchTree(leftSide,operator.leftSide);
-    matchTree(rightSide,operator.rightSide);
-}
-function matchNumberLiteral(ast,numberLiteral) {
-    expect(ast).toMatchObject({token:{lexxem:numberLiteral.number}});
-}
+    expectAst(ast).toMatch(expected);
+});
