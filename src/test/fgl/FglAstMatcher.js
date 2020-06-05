@@ -24,6 +24,8 @@ function matchTree(ast,expected) {
         matchStringLiteral(ast,expected);
     } else if (expected.booleanValue) {
         matchBooleanLiteral(ast,expected);
+    } else if (expected.identifiers) {
+        matchQIdentifier(ast,expected);
     }
 }
 function matchBinOp(ast,operator) {
@@ -54,4 +56,11 @@ function matchBooleanLiteral(ast,booleanLiteral) {
     //true and false are 4GL and JavaScript keywords
     //mere happenstance
     expect(ast.token.lexxem).toBe(booleanLiteral.booleanValue.toString());
+}
+
+function matchQIdentifier(ast,qIdentifier) {
+    expect(ast.children).toHaveLength(qIdentifier.identifiers.length);
+    qIdentifier.identifiers.forEach((identifier, index) => {
+        expect(ast.children[index]).toBe(identifier);
+    });
 }

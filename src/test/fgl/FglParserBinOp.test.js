@@ -140,7 +140,7 @@ test('complex infix',() => {
     expectAst(ast).toMatch(expected);
 });
 
-test('parenthesis',() => {
+test('parenthesis to right',() => {
     const tokens = ScanNoWhitespace({ source: '2 * ( 3 + 4 )'} );
     expect(tokens).toHaveLength(8); //including EOF
     const ast = Parse(tokens);
@@ -157,3 +157,77 @@ test('parenthesis',() => {
 
     expectAst(ast).toMatch(expected);
 });
+
+test('parenthesis to left',() => {
+    const tokens = ScanNoWhitespace({ source: '( 2 + 3 ) * 4'} );
+    expect(tokens).toHaveLength(8); //including EOF
+    const ast = Parse(tokens);
+
+    const expected = {
+        identifier: '*',
+        leftSide: {
+            identifier: '+',
+            leftSide:  { number: '2' },
+            rightSide: { number: '3' }
+        },
+        rightSide:  { number: '4' }
+    };
+
+    expectAst(ast).toMatch(expected);
+});
+
+test('simple qIdentifier expression left',() => {
+    const tokens = ScanNoWhitespace({ source: 'i + 1'} );
+    expect(tokens).toHaveLength(4); //including EOF
+    const ast = Parse(tokens);
+
+    const expected = {
+        identifier: '+',
+        leftSide:  { identifiers: ['i'] },
+        rightSide: { number: '1'}
+    };
+
+    expectAst(ast).toMatch(expected);
+});
+
+test('simple qIdentifier expression right',() => {
+    const tokens = ScanNoWhitespace({ source: '1 + i'} );
+    expect(tokens).toHaveLength(4); //including EOF
+    const ast = Parse(tokens);
+
+    const expected = {
+        identifier: '+',
+        leftSide:  { number: '1'},
+        rightSide: { identifiers: ['i'] }
+    };
+
+    expectAst(ast).toMatch(expected);
+});
+
+test('full qIdentifier expression left',() => {
+    const tokens = ScanNoWhitespace({ source: 'person.year + 1'} );
+    expect(tokens).toHaveLength(6); //including EOF
+    const ast = Parse(tokens);
+
+    const expected = {
+        identifier: '+',
+        leftSide:  { identifiers: ['person','year'] },
+        rightSide: { number: '1'}
+    };
+
+    expectAst(ast).toMatch(expected);
+});
+test('full qIdentifier expression right',() => {
+    const tokens = ScanNoWhitespace({ source: '1 + person.year'} );
+    expect(tokens).toHaveLength(6); //including EOF
+    const ast = Parse(tokens);
+
+    const expected = {
+        identifier: '+',
+        leftSide:  { number: '1'},
+        rightSide: { identifiers: ['person','year'] }
+    };
+
+    expectAst(ast).toMatch(expected);
+});
+

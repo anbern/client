@@ -1,5 +1,6 @@
 import {
     FunctionInvocationNode,
+    QIdentifierNode,
     NumberLiteralNode, StringLiteralNode, BooleanLiteralNode } from './FglAst';
 
 const Runtime = {
@@ -65,6 +66,47 @@ class Parser {
         } else if (nextToken.isBooleanLiteral()) {
             return this.parseBooleanLiteral();
         } else if (nextToken.is('(')) {
+            return this.parseParenExpression();
+        } else if (nextToken.isIdentifier()) {
+            return this.parseQIdentifier();
+        }
+    }
+
+    parseQIdentifier() {
+        const nextToken = this.peek();
+        if (nextToken.isIdentifier()) {
+            this.consumeToken();
+            const qIdentifierRest = this.parseQIdentifierRest();
+            if (qIdentifierRest) {
+                qIdentifierRest.children =
+                    [nextToken.lexxem].concat(qIdentifierRest.children);
+                return qIdentifierRest;
+            } else {
+                const newQIdentifierNode = new QIdentifierNode();
+                newQIdentifierNode.addChild(nextToken.lexxem);
+                return newQIdentifierNode;
+            }
+        }
+        return null;
+    }
+
+    parseQIdentifierRest() {
+        const nextToken = this.peek();
+        if (nextToken.is('.')) {
+            this.consumeToken();
+            const rest = this.parseQIdentifier();
+            if (!rest) {
+                throw new Error('Identifier expected');
+            }
+            return rest;
+        }
+        return null;
+
+    }
+
+    parseParenExpression() {
+        const nextToken = this.peek();
+        if (nextToken.is('(')) {
             this.consumeToken();
             const expression = this.parseInfixFunctionInvocationLevel(3);
             const peekedToken = this.peek();
@@ -94,6 +136,7 @@ class Parser {
         }
         return null;
     }
+
     parseBooleanLiteral() {
         const nextToken = this.peek();
         if (nextToken.isBooleanLiteral()) {

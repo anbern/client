@@ -37,3 +37,20 @@ test('false literal',() => {
     expectAst(ast).toMatch({ booleanValue: false });
 });
 
+test('simple identifier', () => {
+   const tokens = ScanNoWhitespace({ source: 'myIdentifier' });
+   expect(tokens).toHaveLength(2);
+   const ast = Parse(tokens);
+   expectAst(ast).toMatch({
+       identifiers: ['myIdentifier']
+   });
+});
+
+test('qualified identifier', () => {
+    const tokens = ScanNoWhitespace({ source: 'myIdentifier.mySubIdentifier' });
+    expect(tokens).toHaveLength(4);
+    const ast = Parse(tokens);
+    expectAst(ast).toMatch({
+        identifiers: ['myIdentifier', 'mySubIdentifier']
+    });
+});
