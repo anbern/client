@@ -8,7 +8,7 @@ test('simple multiplication',() => {
     expect(tokens).toHaveLength(4); //including EOF
     const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
-        identifier: '*',
+        binOpIdentifier: '*',
         leftSide: {
             number: '2'
         },
@@ -23,12 +23,12 @@ test('combined multiplication / division ',() => {
     expect(tokens).toHaveLength(6); //including EOF
     const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
-        identifier: '*',
+        binOpIdentifier: '*',
         leftSide: {
             number: '2'
         },
         rightSide: {
-            identifier: '/',
+            binOpIdentifier: '/',
             leftSide: {
                 number: '3'
             },
@@ -44,12 +44,12 @@ test('combined addition and multiplication (* rechts)',() => {
     expect(tokens).toHaveLength(6); //including EOF
     const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
-        identifier: '+',
+        binOpIdentifier: '+',
         leftSide: {
             number: '2'
         },
         rightSide: {
-            identifier: '*',
+            binOpIdentifier: '*',
             leftSide: {
                 number: '3'
             },
@@ -65,9 +65,9 @@ test('combined addition and multiplication (+ rechts)',() => {
     expect(tokens).toHaveLength(6); //including EOF
     const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
-        identifier: '+',
+        binOpIdentifier: '+',
         leftSide: {
-            identifier: '*',
+            binOpIdentifier: '*',
             leftSide: {
                 number: '2'
             },
@@ -86,20 +86,20 @@ test('complex infix',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        identifier: '&',
+        binOpIdentifier: '&',
         leftSide: {
-            identifier: '>',
+            binOpIdentifier: '>',
             leftSide: {
-                identifier: '*',
+                binOpIdentifier: '*',
                 leftSide:  { number: '2' },
                 rightSide: { number: '3' }
             },
             rightSide: { number: '5' }
         },
         rightSide: {
-            identifier: '^=',
+            binOpIdentifier: '^=',
             leftSide: {
-                identifier: '-',
+                binOpIdentifier: '-',
                 leftSide:  { number: '4' },
                 rightSide: { number: '1' }
             },
@@ -116,20 +116,20 @@ test('complex infix',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        identifier: '&',
+        binOpIdentifier: '&',
         leftSide: {
-            identifier: '>',
+            binOpIdentifier: '>',
             leftSide: {
-                identifier: '*',
+                binOpIdentifier: '*',
                 leftSide:  { number: '2' },
                 rightSide: { number: '3' }
             },
             rightSide: { number: '5' }
         },
         rightSide: {
-            identifier: '^=',
+            binOpIdentifier: '^=',
             leftSide: {
-                identifier: '-',
+                binOpIdentifier: '-',
                 leftSide:  { number: '4' },
                 rightSide: { number: '1' }
             },
@@ -146,10 +146,10 @@ test('parenthesis to right',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        identifier: '*',
+        binOpIdentifier: '*',
         leftSide:  { number: '2' },
         rightSide: {
-            identifier: '+',
+            binOpIdentifier: '+',
             leftSide:  { number: '3' },
             rightSide: { number: '4' }
         }
@@ -164,9 +164,9 @@ test('parenthesis to left',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        identifier: '*',
+        binOpIdentifier: '*',
         leftSide: {
-            identifier: '+',
+            binOpIdentifier: '+',
             leftSide:  { number: '2' },
             rightSide: { number: '3' }
         },
@@ -182,7 +182,7 @@ test('simple qIdentifier expression left',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        identifier: '+',
+        binOpIdentifier: '+',
         leftSide:  { identifiers: ['i'] },
         rightSide: { number: '1'}
     };
@@ -196,7 +196,7 @@ test('simple qIdentifier expression right',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        identifier: '+',
+        binOpIdentifier: '+',
         leftSide:  { number: '1'},
         rightSide: { identifiers: ['i'] }
     };
@@ -210,7 +210,7 @@ test('full qIdentifier expression left',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        identifier: '+',
+        binOpIdentifier: '+',
         leftSide:  { identifiers: ['person','year'] },
         rightSide: { number: '1'}
     };
@@ -223,11 +223,10 @@ test('full qIdentifier expression right',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        identifier: '+',
+        binOpIdentifier: '+',
         leftSide:  { number: '1'},
         rightSide: { identifiers: ['person','year'] }
     };
 
     expectAst(ast).toMatch(expected);
 });
-

@@ -43,7 +43,7 @@ class Parser {
         if (nextToken.is('{')) {
             this.consumeToken();
             const blockStatement = new BlockStatementNode();
-            while(this.peek() !== '}') {
+            while(!this.peek().is('}')) {
                 const innerStatement = this.parseStatement();
                 blockStatement.addChild(innerStatement);
             }
@@ -57,8 +57,8 @@ class Parser {
         if (nextToken.isIdentifier()) {
             const lvalue = this.parseQIdentifier();
             const assignOperatorToken = this.peek();
-            if (!assignOperatorToken.is(':=')) {
-                throw new Error ('assign operator := expected');
+            if (!assignOperatorToken.is('=')) {
+                throw new Error ('assign operator = expected');
             }
             this.consumeToken();
             const rvalue = this.parseInfixFunctionInvocationLevel(3);
@@ -85,6 +85,7 @@ class Parser {
             const ifStatement = new IfStatementNode(ifExpression);
             ifStatement.addChild(ifBlock);
             if (elseBlock) { ifStatement.addChild(elseBlock) }
+            return ifStatement;
         }
         return null;
     }

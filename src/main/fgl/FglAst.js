@@ -1,5 +1,3 @@
-//import { Token } from './FglScanner';
-
 class AstNode {}
 
 class ParentAstNode extends AstNode {
@@ -42,9 +40,9 @@ export class QIdentifierNode extends ParentAstNode {
 }
 
 export class FunctionInvocationNode extends ParentAstNode {
-    constructor(identifier) {
+    constructor(binOpIdentifier) {
         super();
-        this.identifier = identifier;
+        this.binOpIdentifier = binOpIdentifier;
     }
 }
 

@@ -1,3 +1,10 @@
+import { AssignmentStatementNode,
+    EmptyStatementNode,
+    BlockStatementNode,
+    IfStatementNode,
+    UntilStatementNode,
+    WhileStatementNode } from '../../main/fgl/FglAst';
+
 /*
  * Helper Functions
  */
@@ -16,7 +23,7 @@ export default function expectAst(ast) {
 }
 
 function matchTree(ast,expected) {
-    if (expected.identifier) {
+    if (expected.binOpIdentifier) {
         matchBinOp(ast,expected);
     } else if (expected.number) {
         matchNumberLiteral(ast,expected);
@@ -26,10 +33,99 @@ function matchTree(ast,expected) {
         matchBooleanLiteral(ast,expected);
     } else if (expected.identifiers) {
         matchQIdentifier(ast,expected);
+    } else if (expected.statementType) {
+        switch(expected.statementType) {
+            case 'assignment':
+                matchAssignmentStatement(ast,expected);
+                break;
+            case 'empty':
+                matchEmptyStatement(ast,expected);
+                break;
+            case 'block':
+                matchBlockStatement(ast,expected);
+                break;
+            case 'if':
+                matchIfStatement(ast,expected);
+                break;
+            case 'until':
+                matchUntilStatement(ast,expected);
+                break;
+            case 'while':
+                matchWhileStatement(ast,expected);
+                break;
+            default:
+                throw new Error('Unknown statement type expected ' + expected.statementType);
+                //break;
+        }
     }
 }
+
+function matchAssignmentStatement(ast,expected) {
+    if (ast instanceof AssignmentStatementNode) {
+        expect(ast.children).toHaveLength(2);
+        const lvalue = ast.children[0];
+        const rvalue = ast.children[1];
+        matchTree(lvalue,expected.lvalue);
+        matchTree(rvalue,expected.rvalue);
+    } else {
+        throw new Error ('no assignmentStatementNode');
+    }
+}
+
+function matchEmptyStatement(ast,expected) {
+    if (ast instanceof EmptyStatementNode) {
+        expect(expected.statementType).toBe('empty');
+    } else {
+        throw new Error ('no emptyStatementNode');
+    }
+}
+
+function matchBlockStatement(ast, expected) {
+    if (ast instanceof BlockStatementNode) {
+        if (!expected.statements) {
+            expect(ast.children).toHaveLength(0);
+        } else {
+            expect(ast.children.length).toBe(expected.statements.length);
+        }
+        ast.children.forEach((statement,index) => matchTree(statement,expected.statements[index]));
+    } else {
+        throw new Error ('no BlockStatementNode');
+    }
+}
+
+function matchIfStatement(ast, expected) {
+    if (ast instanceof IfStatementNode) {
+        expect(ast.ifExpression).toBeDefined();
+        expect(ast.children.length).toBeGreaterThanOrEqual(1);
+        expect(ast.children.length).toBeLessThanOrEqual(2);
+        matchTree(ast.ifExpression, expected.ifExpression);
+        matchTree(ast.children[0],expected.ifBranch);
+        if(ast.children.length === 2) {
+            matchTree(ast.children[1],expected.elseBranch);
+        }
+    } else {
+        throw new Error ('no IfStatementNode');
+    }
+}
+
+function matchUntilStatement(ast, expected) {
+    if (ast instanceof UntilStatementNode) {
+        expect(true).toBeTruthy();
+    } else {
+        throw new Error ('no UntilStatementNode');
+    }
+}
+
+function matchWhileStatement(ast, expected) {
+    if (ast instanceof WhileStatementNode) {
+        expect(true).toBeTruthy();
+    } else {
+        throw new Error ('no WhileStatementNode');
+    }
+}
+
 function matchBinOp(ast,operator) {
-    expect(ast).toMatchObject({identifier:operator.identifier});
+    expect(ast).toMatchObject({binOpIdentifier:operator.binOpIdentifier});
     expect(ast.children).toHaveLength(2);
     const leftSide = ast.children[0];
     const rightSide = ast.children[1];
