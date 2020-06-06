@@ -110,7 +110,10 @@ function matchIfStatement(ast, expected) {
 
 function matchUntilStatement(ast, expected) {
     if (ast instanceof UntilStatementNode) {
-        expect(true).toBeTruthy();
+        expect(ast.untilExpression).toBeDefined();
+        expect(ast.children).toHaveLength(1);
+        matchTree(ast.untilExpression,expected.untilExpression);
+        matchTree(ast.children[0],expected.blockStatement);
     } else {
         throw new Error ('no UntilStatementNode');
     }
@@ -118,7 +121,10 @@ function matchUntilStatement(ast, expected) {
 
 function matchWhileStatement(ast, expected) {
     if (ast instanceof WhileStatementNode) {
-        expect(true).toBeTruthy();
+        expect(ast.whileExpression).toBeDefined();
+        expect(ast.children).toHaveLength(1);
+        matchTree(ast.whileExpression,expected.whileExpression);
+        matchTree(ast.children[0],expected.blockStatement);
     } else {
         throw new Error ('no WhileStatementNode');
     }

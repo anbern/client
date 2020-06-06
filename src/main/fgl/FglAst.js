@@ -10,10 +10,16 @@ class ParentAstNode extends AstNode {
         this.children.push(child);
     }
 }
+
+export class EmptyStatementNode extends AstNode {
+}
+
 export class BlockStatementNode extends ParentAstNode {
 }
+
 export class AssignmentStatementNode extends ParentAstNode {
 }
+
 export class IfStatementNode extends ParentAstNode {
     constructor(ifExpression) {
         super();
@@ -31,9 +37,6 @@ export class UntilStatementNode extends ParentAstNode {
         super();
         this.untilExpression = untilExpression;
     }
-}
-
-export class EmptyStatementNode extends AstNode {
 }
 
 export class QIdentifierNode extends ParentAstNode {

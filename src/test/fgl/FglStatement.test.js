@@ -109,3 +109,53 @@ test('if statement with else', () => {
         }
     });
 });
+
+test('do...until statement', () => {
+    const tokens = ScanNoWhitespace( { source: 'do { i = 1 } until i > 10'});
+    expect(tokens).toHaveLength(11); //including EOF
+    const ast = ParseStatement(tokens);
+    expectAst(ast).toMatch({
+        statementType: 'until',
+        untilExpression: {
+            binOpIdentifier: '>',
+            leftSide: { identifiers: ['i']},
+            rightSide: { number: '10'}
+        },
+        blockStatement: {
+            statementType: 'block',
+            statements: [{
+                statementType: 'assignment',
+                lvalue: { identifiers: ['i']},
+                rvalue: { number: '1'}
+            }]
+        }
+
+    });
+});
+
+test('while statement', () => {
+    const tokens = ScanNoWhitespace( { source: 'while i < 10 { i = i + 1 }'});
+    expect(tokens).toHaveLength(12); //including EOF
+    const ast = ParseStatement(tokens);
+    expectAst(ast).toMatch({
+        statementType: 'while',
+        whileExpression: {
+            binOpIdentifier: '<',
+            leftSide: { identifiers: ['i']},
+            rightSide: { number: '10'}
+        },
+        blockStatement: {
+            statementType: 'block',
+            statements: [{
+                statementType: 'assignment',
+                lvalue: { identifiers: ['i']},
+                rvalue: {
+                    binOpIdentifier: '+',
+                    leftSide:  { identifiers: ['i']},
+                    rightSide: { number: '1'}
+                }
+            }]
+        }
+
+    });
+});

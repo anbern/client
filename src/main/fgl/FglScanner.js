@@ -105,12 +105,6 @@ const ScannedCharacters = {
 
 class Scanner {
     constructor(sourceString) {
-        /*
-        if (!sourceString || (sourceString && sourceString === '')) {
-            throw new Error('Source must be non-emtpy String');
-        }
-         */
-
         this.sourceString = sourceString;
         this.maxPosition  = sourceString.length - 1;
         this.position     = 0;
@@ -191,6 +185,7 @@ class Scanner {
             case 'if':
             case 'else':
             case 'while':
+            case 'do':
             case 'until':
                 return TokenType.KEYWORD;
             default:

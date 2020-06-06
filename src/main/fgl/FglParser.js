@@ -3,7 +3,8 @@ import {
     IfStatementNode, WhileStatementNode, UntilStatementNode,
     FunctionInvocationNode, QIdentifierNode,
     NumberLiteralNode, StringLiteralNode, BooleanLiteralNode } from './FglAst';
-
+import {Runtime } from './FglRuntime';
+/*
 const Runtime = {
     knownFunctionIdentifiersLevels: [
         ['*','/'],
@@ -12,6 +13,7 @@ const Runtime = {
         ['&','|']
     ]
 };
+*/
 
 class Parser {
     constructor(tokens) {
@@ -32,7 +34,7 @@ class Parser {
         } else if (nextToken.is('while')) {
             return this.parseWhileStatement();
         } else if (nextToken.is('do')) {
-            return this.parseDoUntilStatement();
+            return this.parseUntilStatement();
         } else if (nextToken.is(';')) {
             return this.parseEmptyStatement();
         }
@@ -103,7 +105,7 @@ class Parser {
         return null;
     }
 
-    parseDoUntilStatement() {
+    parseUntilStatement() {
         const nextToken = this.peek();
         if (nextToken.is('do')) {
             this.consumeToken();
