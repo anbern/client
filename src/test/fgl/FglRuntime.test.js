@@ -27,11 +27,13 @@ test('parent scope shadowing', () => {
 
 test('a short program', () => {
     const runtime = new Runtime();
+    runtime.addDebugLine(1,(node,scope,result) => scope.log());
     runtime.loadAndRun({source:'{\ti = 0\r\n\ti = i + 1\r\n}'});
  });
 
 test('a do...until program', () => {
     const runtime = new Runtime();
+    //runtime.addDebugLine(2,(node,scope,result) =>  { if (result)  console.log(result)});
     runtime.loadAndRun({source:
             '{' +
                 '\ti = 0\r\n' +

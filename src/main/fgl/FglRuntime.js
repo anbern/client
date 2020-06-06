@@ -31,13 +31,95 @@ export class Scope {
             return undefined;
         }
     }
+
+    log() {
+        console.log('logging scope');
+        if (this.parentScope) {
+            console.log('\tthis scope has a parent scope');
+        } else {
+            console.log('\this is the GLOBAL scope which does not have a parent scope');
+        }
+        for(const property in this) {
+            if (this.hasOwnProperty(property)) {
+                if (property !== 'parentScope') {
+                    console.log('\tProperty: ' + property + ' value: ' + this[property]);
+                }
+            }
+        }
+    }
 }
 
 export class Debugger {
     constructor(runtime) {
         this.runtime = runtime;
+        this.lineNumberEntries = [];
     }
 
+    reset() {
+        this.lineNumberEntries = [];
+    }
+
+    enterExpression(expressionNode, scope) {
+        this.processDebugLine(
+          expressionNode.sourceCodeReference.startLineNumber,
+          expressionNode,
+          scope,
+            null);
+    }
+    exitExpression(expressionNode, scope, result) {
+        this.processDebugLine(
+            expressionNode.sourceCodeReference.endLineNumber,
+            expressionNode,
+            scope,
+            result);
+    }
+
+    enterStatement(statementNode, scope) {
+        this.processDebugLine(
+            statementNode.sourceCodeReference.startLineNumber,
+            statementNode,
+            scope,
+            null);
+    }
+    exitStatement(statementNode, scope, result) {
+        this.processDebugLine(
+            statementNode.sourceCodeReference.endLineNumber,
+            statementNode,
+            scope,
+            result);
+    }
+
+    debugScopeChain(scope,level) {
+        for(const property in scope) {
+            if (property === 'parentScope') {
+                continue;
+            }
+            if (scope.hasOwnProperty(property)) {
+                console.log('level ' + level + ' property ' + property + ' value ' + scope[property]);
+            }
+        }
+        if (scope.parentScope) {
+            console.log('level ' + level + ' this scope has a parent scope');
+            this.debugScopeChain(scope.parentScope, level-1);
+        } else {
+            console.log('level ' + level + ' this scope does not have a parent scope');
+        }
+    }
+
+    addDebugLine(lineNumber,  nodeScopeResultConsumer) {
+        const lineNumberEntry = {
+            lineNumber: lineNumber,
+            nodeScopeResultConsumer: nodeScopeResultConsumer
+        };
+        this.lineNumberEntries.push(lineNumberEntry);
+    }
+
+    processDebugLine(lineNumber, node, scope, result) {
+        const lineCommands = this.lineNumberEntries.filter(entry => entry.lineNumber === lineNumber);
+        lineCommands.forEach(command => {
+            command.nodeScopeResultConsumer(node, scope, result);
+        })
+    }
 }
 
 export class Runtime  {
@@ -50,6 +132,15 @@ export class Runtime  {
 
     constructor() {
         this.globalScope = new Scope(null);
+        this.debugger = new Debugger(this);
+    }
+
+    addDebugLine(lineNumber, nodeScopeResultConsumer) {
+        this.debugger.addDebugLine(lineNumber, nodeScopeResultConsumer);
+    }
+
+    resetDebugger() {
+        this.debugger.reset();
     }
 
     loadAndRun(module) {
@@ -59,24 +150,28 @@ export class Runtime  {
     }
 
     run(mainAstNode) {
-        const result = this.interpret(mainAstNode, this.globalScope);
+        const result = this.interpretStatement(mainAstNode, this.globalScope);
         return result;
     }
 
-    interpret(astNode, scope) {
+    interpretStatement(astNode, scope) {
+        this.debugger.enterStatement(astNode, scope);
+        let result;
         if (astNode instanceof EmptyStatementNode) {
-            return this.interpretEmptyStatement(astNode,scope);
+            result = this.interpretEmptyStatement(astNode,scope);
         } else if (astNode instanceof BlockStatementNode) {
-            return this.interpretBlockStatement(astNode, scope);
+            result = this.interpretBlockStatement(astNode, scope);
         } else if (astNode instanceof AssignmentStatementNode) {
-            return this.interpretAssignmentStatement(astNode,scope);
+            result = this.interpretAssignmentStatement(astNode,scope);
         } else if (astNode instanceof IfStatementNode) {
-            return this.interpretIfStatement(astNode, scope);
+            result = this.interpretIfStatement(astNode, scope);
         } else if (astNode instanceof WhileStatementNode) {
-            return this.interpretWhileStatement(astNode, scope);
+            result = this.interpretWhileStatement(astNode, scope);
         } else if (astNode instanceof UntilStatementNode) {
-            return this.interpretUntilStatement(astNode, scope);
+            result = this.interpretUntilStatement(astNode, scope);
         }
+        this.debugger.exitStatement(astNode, scope, result);
+        return result;
     }
 
     interpretEmptyStatement(emptyNode, scope) {
@@ -86,8 +181,8 @@ export class Runtime  {
     interpretBlockStatement(blockNode,parentScope) {
         const blockScope = new Scope(parentScope);
         let result = undefined;
-        blockNode.children.forEach(statement => result = this.interpret(statement, blockScope));
-        this.debugScopeChain(blockScope,0);
+        blockNode.children.forEach(statement =>
+            result = this.interpretStatement(statement, blockScope));
         return result;
     }
 
@@ -120,7 +215,7 @@ export class Runtime  {
 
         let result;
         while(this.evaluateExpression(whileNode.whileExpression, scope)) {
-            result = this.interpret(whileNode.children[0],scope);
+            result = this.interpretStatement(whileNode.children[0],scope);
         }
         return result;
 
@@ -129,25 +224,29 @@ export class Runtime  {
     interpretUntilStatement(untilNode, scope) {
         let result;
         do {
-            result = this.interpret(untilNode.children[0],scope);
+            result = this.interpretStatement(untilNode.children[0],scope);
         } while (!this.evaluateExpression(untilNode.untilExpression, scope));
         return result;
     }
 
     evaluateExpression(node,scope) {
+        let result;
+        this.debugger.enterExpression(node,scope);
         if (node instanceof NumberLiteralNode) {
-            return node.value;
+            result =  node.value;
         } else if (node instanceof StringLiteralNode) {
-            return node.value;
+            result =  node.value;
         } else if (node instanceof BooleanLiteralNode) {
-            return node.value;
+            result =  node.value;
         } else if (node instanceof QIdentifierNode) {
-            return this.evaluateQIdentifierRValue(node,scope);
+            result =  this.evaluateQIdentifierRValue(node,scope);
         } else if (node instanceof FunctionInvocationNode) {
-            return this.evaluateFunctionInvocation(node,scope);
+            result = this.evaluateFunctionInvocation(node,scope);
         } else {
             throw new Error ('cannot evaluate ' + node);
         }
+        this.debugger.exitExpression(node,scope,result);
+        return result;
     }
 
     evaluateQIdentifierRValue(qIdentifier,scope) {
@@ -223,20 +322,4 @@ export class Runtime  {
         return result;
     }
 
-    debugScopeChain(scope,level) {
-        for(const property in scope) {
-            if (property === 'parentScope') {
-                continue;
-            }
-            if (scope.hasOwnProperty(property)) {
-                console.log('level ' + level + ' property ' + property + ' value ' + scope[property]);
-            }
-        }
-        if (scope.parentScope) {
-            console.log('level ' + level + ' this scope has a parent scope');
-            this.debugScopeChain(scope.parentScope, level-1);
-        } else {
-            console.log('level ' + level + ' this scope does not have a parent scope');
-        }
-    }
 }
