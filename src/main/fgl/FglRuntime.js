@@ -33,6 +33,13 @@ export class Scope {
     }
 }
 
+export class Debugger {
+    constructor(runtime) {
+        this.runtime = runtime;
+    }
+
+}
+
 export class Runtime  {
     static knownFunctionIdentifiersLevels = [
         ['*', '/'],
@@ -144,10 +151,6 @@ export class Runtime  {
     }
 
     evaluateQIdentifierRValue(qIdentifier,scope) {
-        /*
-        const identifier = qIdentifier.children[0];
-        return scope.getValue(identifier);
-        */
         let currentValue = scope;
         qIdentifier.children.forEach(identifier => {
            currentValue = currentValue.lookup(identifier);
@@ -237,4 +240,3 @@ export class Runtime  {
         }
     }
 }
-

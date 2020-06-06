@@ -1,8 +1,12 @@
-class AstNode {}
+class AstNode {
+    constructor(sourceCodeReference) {
+        this.sourceCodeReference = sourceCodeReference;
+    }
+}
 
 class ParentAstNode extends AstNode {
-    constructor() {
-        super();
+    constructor(sourceCodeReference) {
+        super(sourceCodeReference);
         this.children = [];
     }
 
@@ -21,20 +25,20 @@ export class AssignmentStatementNode extends ParentAstNode {
 }
 
 export class IfStatementNode extends ParentAstNode {
-    constructor(ifExpression) {
-        super();
+    constructor(sourceCodeReference, ifExpression) {
+        super(sourceCodeReference);
         this.ifExpression = ifExpression;
     }
 }
 export class WhileStatementNode extends ParentAstNode {
-    constructor(whileExpression) {
-        super();
+    constructor(sourceCodeReference, whileExpression) {
+        super(sourceCodeReference);
         this.whileExpression = whileExpression;
     }
 }
 export class UntilStatementNode extends ParentAstNode {
-    constructor(untilExpression) {
-        super();
+    constructor(sourceCodeReference, untilExpression) {
+        super(sourceCodeReference );
         this.untilExpression = untilExpression;
     }
 }
@@ -43,15 +47,15 @@ export class QIdentifierNode extends ParentAstNode {
 }
 
 export class FunctionInvocationNode extends ParentAstNode {
-    constructor(binOpIdentifier) {
-        super();
+    constructor(sourceCodeReference, binOpIdentifier) {
+        super(sourceCodeReference);
         this.binOpIdentifier = binOpIdentifier;
     }
 }
 
 class LiteralNode extends AstNode {
     constructor(token) {
-        super();
+        super(token.sourceCodeReference);
         this.token = token;
     }
 }

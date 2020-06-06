@@ -3,17 +3,9 @@ import {
     IfStatementNode, WhileStatementNode, UntilStatementNode,
     FunctionInvocationNode, QIdentifierNode,
     NumberLiteralNode, StringLiteralNode, BooleanLiteralNode } from './FglAst';
-import {Runtime } from './FglRuntime';
-/*
-const Runtime = {
-    knownFunctionIdentifiersLevels: [
-        ['*','/'],
-        ['+', '-'],
-        ['>','>=','=','^=','<=','<'],
-        ['&','|']
-    ]
-};
-*/
+import { Runtime } from './FglRuntime';
+import { SourceCodeReference } from './FglSourceCodeReference'
+
 
 class Parser {
     constructor(tokens) {
@@ -41,15 +33,21 @@ class Parser {
     }
 
     parseBlockStatement() {
-        const nextToken = this.peek();
-        if (nextToken.is('{')) {
+        let endToken;
+        const startToken = this.peek();
+
+        if (startToken.is('{')) {
             this.consumeToken();
-            const blockStatement = new BlockStatementNode();
-            while(!this.peek().is('}')) {
+            const blockSourceCodeReference = SourceCodeReference.copy(startToken.sourceCodeReference);
+            const blockStatement = new BlockStatementNode(blockSourceCodeReference);
+            endToken = this.peek();
+            while(!endToken.is('}')) {
                 const innerStatement = this.parseStatement();
                 blockStatement.addChild(innerStatement);
+                endToken = this.peek();
             }
             this.consumeToken();
+            blockStatement.sourceCodeReference.append(endToken.sourceCodeReference);
             return blockStatement;
         }
     }
@@ -64,7 +62,9 @@ class Parser {
             }
             this.consumeToken();
             const rvalue = this.parseInfixFunctionInvocationLevel(3);
-            const newAssignmentStatementNode = new AssignmentStatementNode();
+            const assignmentSourceCodeReference = SourceCodeReference.copy(lvalue.sourceCodeReference);
+            assignmentSourceCodeReference.append(rvalue.sourceCodeReference);
+            const newAssignmentStatementNode = new AssignmentStatementNode(assignmentSourceCodeReference);
             newAssignmentStatementNode.addChild(lvalue);
             newAssignmentStatementNode.addChild(rvalue);
             return newAssignmentStatementNode;
@@ -84,7 +84,12 @@ class Parser {
                 this.consumeToken();
                 elseBlock = this.parseBlockStatement();
             }
-            const ifStatement = new IfStatementNode(ifExpression);
+            const ifSourceCodeReference = SourceCodeReference.copy(ifToken.sourceCodeReference);
+            ifSourceCodeReference.append(ifBlock.sourceCodeReference);
+            if (elseBlock) {
+                ifSourceCodeReference.append(elseBlock.sourceCodeReference);
+            }
+            const ifStatement = new IfStatementNode(ifSourceCodeReference, ifExpression);
             ifStatement.addChild(ifBlock);
             if (elseBlock) { ifStatement.addChild(elseBlock) }
             return ifStatement;
@@ -98,7 +103,9 @@ class Parser {
             this.consumeToken();
             const whileExpression = this.parseInfixFunctionInvocationLevel(3);
             const whileBlock = this.parseBlockStatement();
-            const whileStatementNode = new WhileStatementNode(whileExpression);
+            const whileSourceCodeReference = SourceCodeReference.copy(nextToken.sourceCodeReference);
+            whileSourceCodeReference.append(whileBlock.sourceCodeReference);
+            const whileStatementNode = new WhileStatementNode(whileSourceCodeReference, whileExpression);
             whileStatementNode.addChild(whileBlock);
             return whileStatementNode;
         }
@@ -116,20 +123,20 @@ class Parser {
             }
             this.consumeToken();
             const untilExpression = this.parseInfixFunctionInvocationLevel(3);
-            const untilStatementNode = new UntilStatementNode(untilExpression);
+            const untilSourceCodeReference = SourceCodeReference.copy(nextToken.sourceCodeReference);
+            untilSourceCodeReference.append(untilExpression.sourceCodeReference);
+            const untilStatementNode = new UntilStatementNode(untilSourceCodeReference, untilExpression);
             untilStatementNode.addChild(doUntilBlock);
             return untilStatementNode;
         }
         return null;
     }
 
-
-
     parseEmptyStatement() {
         const nextToken = this.peek();
         if (nextToken.is(';')) {
             this.consumeToken();
-            return new EmptyStatementNode();
+            return new EmptyStatementNode(nextToken.sourceCodeReference);
         }
         return null;
     }
@@ -147,7 +154,11 @@ class Parser {
             return leftNode;
         }
 
+        const finSourceCodeReference = SourceCodeReference.copy(leftNode.sourceCodeReference);
+        finSourceCodeReference.append(infixFunctionInvocationRest.rightSide.sourceCodeReference);
+
         const functionInvocationNode = new FunctionInvocationNode(
+            finSourceCodeReference,
             infixFunctionInvocationRest.operatorToken.lexxem
         );
         functionInvocationNode.addChild(leftNode);
@@ -165,6 +176,7 @@ class Parser {
 
         this.consumeToken();
         const rightSide = this.parseInfixFunctionInvocationLevel(level);
+
         return {
             operatorToken: operatorToken,
             rightSide: rightSide
@@ -194,9 +206,10 @@ class Parser {
             if (qIdentifierRest) {
                 qIdentifierRest.children =
                     [nextToken.lexxem].concat(qIdentifierRest.children);
+                qIdentifierRest.sourceCodeReference.prepend(nextToken.sourceCodeReference);
                 return qIdentifierRest;
             } else {
-                const newQIdentifierNode = new QIdentifierNode();
+                const newQIdentifierNode = new QIdentifierNode(nextToken.sourceCodeReference);
                 newQIdentifierNode.addChild(nextToken.lexxem);
                 return newQIdentifierNode;
             }
@@ -212,8 +225,10 @@ class Parser {
             if (!rest) {
                 throw new Error('Identifier expected');
             }
+            rest.sourceCodeReference.prepend(nextToken.sourceCodeReference);
             return rest;
         }
+
         return null;
 
     }
@@ -229,6 +244,8 @@ class Parser {
             } else {
                 throw new Error('Missing (');
             }
+            expression.sourceCodeReference.prepend(nextToken.sourceCodeReference);
+            expression.sourceCodeReference.append(peekedToken.sourceCodeReference);
             return expression;
         }
     }

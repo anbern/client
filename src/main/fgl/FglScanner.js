@@ -1,18 +1,4 @@
-
-export class SourceCodeReference {
-    constructor(module,
-                startPosition, endPosition,
-                startLineNumber, endLineNumber,
-                startPositionInLine, endPositionInLine) {
-        this.module                 = module;
-        this.startPosition          = startPosition;
-        this.endPosition            = endPosition;
-        this.startLineNumber        = startLineNumber;
-        this.endLineNumber          = endLineNumber;
-        this.startPositionInLine    = startPositionInLine;
-        this.endPositionInLine      = endPositionInLine;
-    }
-}
+import { SourceCodeReference } from './FglSourceCodeReference';
 
 export const TokenType  = {
     EOF             : 'EOF',
