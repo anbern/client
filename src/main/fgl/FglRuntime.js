@@ -4,7 +4,7 @@ import {
     FunctionInvocationNode, QIdentifierNode,
     NumberLiteralNode, StringLiteralNode, BooleanLiteralNode } from './FglAst';
 import { ScanNoWhitespace } from './FglScanner';
-import  { ParseStatement } from './FglParser';
+import { ParseStatement } from './FglParser';
 
 export class Scope {
     constructor(parentScope) {
@@ -18,7 +18,8 @@ export class Scope {
     }
     //Convenience API
     getValue(identifier) {
-        return this.lookup(identifier);
+        const result =  this.lookup(identifier);
+        return result;
     }
 
     lookup(identifier) {
@@ -51,7 +52,8 @@ export class Runtime  {
     }
 
     run(mainAstNode) {
-        return this.interpret(mainAstNode, this.globalScope);
+        const result = this.interpret(mainAstNode, this.globalScope);
+        return result;
     }
 
     interpret(astNode, scope) {
@@ -75,12 +77,10 @@ export class Runtime  {
     }
 
     interpretBlockStatement(blockNode,parentScope) {
-        console.log('entering anonymous block');
         const blockScope = new Scope(parentScope);
         let result = undefined;
         blockNode.children.forEach(statement => result = this.interpret(statement, blockScope));
         this.debugScopeChain(blockScope,0);
-        console.log('leaving anonymous block with result ' + result);
         return result;
     }
 
@@ -88,13 +88,9 @@ export class Runtime  {
 
         const value       = this.evaluateExpression(assignmentNode.children[1], scope);
         const qIdentifier = assignmentNode.children[0];
+        const targetInfo  = this.evaluateQIdentifierLValue(qIdentifier, scope);
 
-        if (qIdentifier.children.length > 1) {
-            throw new Error('does not support qualified identifiers yet');
-        }
-        const targetIdentifier = qIdentifier.children[0];
-
-        scope.setValue(targetIdentifier,value);
+        targetInfo.lScope.setValue(targetInfo.lIdentifier,value);
         return value;
     }
 
@@ -139,7 +135,7 @@ export class Runtime  {
         } else if (node instanceof BooleanLiteralNode) {
             return node.value;
         } else if (node instanceof QIdentifierNode) {
-            return this.evaluateQIdentifier(node,scope);
+            return this.evaluateQIdentifierRValue(node,scope);
         } else if (node instanceof FunctionInvocationNode) {
             return this.evaluateFunctionInvocation(node,scope);
         } else {
@@ -147,9 +143,28 @@ export class Runtime  {
         }
     }
 
-    evaluateQIdentifier(qIdentifier,scope) {
+    evaluateQIdentifierRValue(qIdentifier,scope) {
+        /*
         const identifier = qIdentifier.children[0];
         return scope.getValue(identifier);
+        */
+        let currentValue = scope;
+        qIdentifier.children.forEach(identifier => {
+           currentValue = currentValue.lookup(identifier);
+        });
+        return currentValue;
+    }
+
+    evaluateQIdentifierLValue(qIdentifier,scope) {
+        let currentScope = scope;
+        const lastIdentifier = qIdentifier.children[qIdentifier.children.length - 1];
+        if (qIdentifier.children.length > 1) {
+            for(let index = 0; index <= qIdentifier.children.length - 2; index++) {
+                currentScope = currentScope.lookup(qIdentifier.children[index]);
+            }
+        }
+        const currentValue = currentScope.getValue(lastIdentifier);
+        return { lScope: currentScope, lIdentifier: lastIdentifier, rValue: currentValue };
     }
 
     //This delegates everything to JavaScript
@@ -207,18 +222,18 @@ export class Runtime  {
 
     debugScopeChain(scope,level) {
         for(const property in scope) {
-            if (property === 'parentScope' && scope.parentScope) {
+            if (property === 'parentScope') {
                 continue;
             }
             if (scope.hasOwnProperty(property)) {
                 console.log('level ' + level + ' property ' + property + ' value ' + scope[property]);
             }
         }
-        if (scope.parentSocpe) {
-            console.log('this scope has a parent scope');
+        if (scope.parentScope) {
+            console.log('level ' + level + ' this scope has a parent scope');
             this.debugScopeChain(scope.parentScope, level-1);
         } else {
-            console.log('this scope does not have a parent scope');
+            console.log('level ' + level + ' this scope does not have a parent scope');
         }
     }
 }

@@ -29,3 +29,20 @@ test('a short program', () => {
     const runtime = new Runtime();
     runtime.loadAndRun({source:'{\ti = 0\r\n\ti = i + 1\r\n}'});
  });
+
+test('a do...until program', () => {
+    const runtime = new Runtime();
+    runtime.loadAndRun({source:
+            '{' +
+                '\ti = 0\r\n' +
+                '\tdo { parentScope.i = parentScope.i + 1 } until i > 9\r\n' +
+            '}'});
+});
+
+test('a while program', () => {
+    const runtime = new Runtime();
+    runtime.loadAndRun({source:'{' +
+            '\ti = 10\r\n' +
+            '\twhile i > 1 { parentScope.i = parentScope.i - 1 }\r\n' +
+            '}'});
+});
