@@ -50,6 +50,14 @@ export class Scope {
 }
 
 export class Debugger {
+
+    static Event = {
+        BeforeExpression: 'BeforeExpression',
+        AfterExpression: 'AfterExpression',
+        BeforeStatement: 'BeforeStatement',
+        AfterStatement: 'AfterStatement'
+    };
+
     constructor(runtime) {
         this.runtime = runtime;
         this.lineNumberEntries = [];
@@ -62,6 +70,7 @@ export class Debugger {
     enterExpression(expressionNode, scope) {
         this.processDebugLine(
           expressionNode.sourceCodeReference.startLineNumber,
+          Debugger.Event.BeforeExpression,
           expressionNode,
           scope,
             null);
@@ -69,6 +78,7 @@ export class Debugger {
     exitExpression(expressionNode, scope, result) {
         this.processDebugLine(
             expressionNode.sourceCodeReference.endLineNumber,
+            Debugger.Event.AfterExpression,
             expressionNode,
             scope,
             result);
@@ -77,6 +87,7 @@ export class Debugger {
     enterStatement(statementNode, scope) {
         this.processDebugLine(
             statementNode.sourceCodeReference.startLineNumber,
+            Debugger.Event.BeforeStatement,
             statementNode,
             scope,
             null);
@@ -84,6 +95,7 @@ export class Debugger {
     exitStatement(statementNode, scope, result) {
         this.processDebugLine(
             statementNode.sourceCodeReference.endLineNumber,
+            Debugger.Event.AfterStatement,
             statementNode,
             scope,
             result);
@@ -106,18 +118,21 @@ export class Debugger {
         }
     }
 
-    addDebugLine(lineNumber,  nodeScopeResultConsumer) {
-        const lineNumberEntry = {
+    addDebugLine(lineNumber,  event, nodeScopeResultConsumer) {
+        const lineNumberCommand = {
             lineNumber: lineNumber,
+            event: event,
             nodeScopeResultConsumer: nodeScopeResultConsumer
         };
-        this.lineNumberEntries.push(lineNumberEntry);
+        this.lineNumberEntries.push(lineNumberCommand);
     }
 
-    processDebugLine(lineNumber, node, scope, result) {
+    processDebugLine(lineNumber, debugEvent, node, scope, result) {
         const lineCommands = this.lineNumberEntries.filter(entry => entry.lineNumber === lineNumber);
         lineCommands.forEach(command => {
-            command.nodeScopeResultConsumer(node, scope, result);
+            if (command.event === debugEvent) {
+                command.nodeScopeResultConsumer(node, scope, result);
+            }
         })
     }
 }
@@ -135,8 +150,8 @@ export class Runtime  {
         this.debugger = new Debugger(this);
     }
 
-    addDebugLine(lineNumber, nodeScopeResultConsumer) {
-        this.debugger.addDebugLine(lineNumber, nodeScopeResultConsumer);
+    addDebugLine(lineNumber, event, nodeScopeResultConsumer) {
+        this.debugger.addDebugLine(lineNumber, event, nodeScopeResultConsumer);
     }
 
     resetDebugger() {
