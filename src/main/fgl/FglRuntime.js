@@ -301,7 +301,19 @@ export class Runtime  {
         const rightValue =
             this.evaluateExpression(functionInvocationNode.children[1], scope);
         let result;
-        switch(functionInvocationNode.binOpIdentifier) {
+        const functionQName = functionInvocationNode.operatorIdentifier.children;
+        if (functionQName.length === 1) {
+            result = this.evaluateBuiltInFunction(functionQName[0], leftValue, rightValue);
+        }
+        if (result === undefined) {
+            throw new Error ('Cannot yet evaluate ' + functionQName[0] + '...');
+        }
+        return result;
+    }
+
+    evaluateBuiltInFunction(name, leftValue, rightValue) {
+        let result;
+        switch(name) {
             case '&':
                 result = leftValue & rightValue;
                 break;

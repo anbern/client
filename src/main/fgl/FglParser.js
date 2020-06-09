@@ -2,6 +2,7 @@ import {
     EmptyStatementNode, BlockStatementNode, AssignmentStatementNode,
     IfStatementNode, WhileStatementNode, UntilStatementNode,
     FunctionInvocationNode, QIdentifierNode,
+    ParamExpressionListNode,
     NumberLiteralNode, StringLiteralNode, BooleanLiteralNode } from './FglAst';
 import { Runtime } from './FglRuntime';
 import { SourceCodeReference } from './FglSourceCodeReference'
@@ -159,7 +160,7 @@ class Parser {
 
         const functionInvocationNode = new FunctionInvocationNode(
             finSourceCodeReference,
-            infixFunctionInvocationRest.operatorToken.lexxem
+            infixFunctionInvocationRest.operatorIdentifier
         );
         functionInvocationNode.addChild(leftNode);
         functionInvocationNode.addChild(infixFunctionInvocationRest.rightSide);
@@ -175,10 +176,12 @@ class Parser {
         }
 
         this.consumeToken();
+        const operatorIdentifier = new QIdentifierNode(operatorToken.sourceCodeReference);
+        operatorIdentifier.addChild(operatorToken.lexxem);
         const rightSide = this.parseInfixFunctionInvocationLevel(level);
 
         return {
-            operatorToken: operatorToken,
+            operatorIdentifier: operatorIdentifier,
             rightSide: rightSide
         };
     }
@@ -194,10 +197,74 @@ class Parser {
         } else if (nextToken.is('(')) {
             return this.parseParenExpression();
         } else if (nextToken.isIdentifier()) {
-            return this.parseQIdentifier();
+            return this.parseQIdentifierOrParenFunctionInvocation();
         }
     }
 
+    parseQIdentifierOrParenFunctionInvocation() {
+        const qIdentifier = this.parseQIdentifier();
+        let result;
+        if (qIdentifier) {
+            const openParen = this.peek();
+            if (openParen.is('(')) {
+                const paramExpressionList = this.parseParamExpressionList();
+                const functionInvocationSourceCodeReference = qIdentifier.sourceCodeReference.copy();
+                functionInvocationSourceCodeReference.append(paramExpressionList.sourceCodeReference);
+                result = new FunctionInvocationNode(
+                    functionInvocationSourceCodeReference,
+                    qIdentifier);
+                result.children = paramExpressionList.children;
+            } else {
+                result = qIdentifier;
+            }
+        } else {
+            result = null;
+        }
+        return result;
+    }
+
+    parseParamExpressionList() {
+        const openParen = this.peek();
+        let result;
+        if (openParen.is('(')) {
+            const firstExpression = this.parseInfixFunctionInvocationLevel(3);
+            const paramExpressionSourceCodeReference = firstExpression.sourceCodeReference.copy();
+            result = new ParamExpressionListNode(paramExpressionSourceCodeReference);
+            const restList = this.parseParamExpressionListRest();
+            if (restList) {
+                result.sourceCodeReference.append(restList.sourceCodeReference);
+                result.children = [firstExpression].concat(restList.children);
+            } else {
+                const closeParen = this.peek();
+                if (closeParen.is(')')) {
+                    this.consumeToken();
+                } else {
+                    throw new Error("Closing paren expected");
+                }
+            }
+        } else {
+            result = null;
+        }
+        return result;
+    }
+
+    parseParamExpressionListRest() {
+        const commaOrClosingParen = this.peek();
+        let result;
+        if (commaOrClosingParen.is(',')) {
+            this.consumeToken();
+            const restExpression = this.parseParamExpressionList();
+            result = restExpression;
+        } else if (commaOrClosingParen.is(')')) {
+            this.consumeToken();
+            //Artificial empty statement to keep the source Code reference count intact
+            //Room for improvement given...
+            result = new EmptyStatementNode(commaOrClosingParen.sourceCodeReference);
+        } else {
+            result = null;
+        }
+        return result;
+    }
     parseQIdentifier() {
         const nextToken = this.peek();
         if (nextToken.isIdentifier()) {

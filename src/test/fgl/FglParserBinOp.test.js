@@ -8,14 +8,11 @@ test('simple multiplication',() => {
     expect(tokens).toHaveLength(4); //including EOF
     const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
-        binOpIdentifier: '*',
-        leftSide: {
-            number: '2'
-        },
-        rightSide: {
-            number: '3'
-        }
-    });
+        functionName: { identifiers: ['*'] },
+        parameters: [
+            { number: '2' },
+            { number: '3' }
+            ]}); //metaLisp :-)
 });
 
 test('combined multiplication / division ',() => {
@@ -23,20 +20,14 @@ test('combined multiplication / division ',() => {
     expect(tokens).toHaveLength(6); //including EOF
     const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
-        binOpIdentifier: '*',
-        leftSide: {
-            number: '2'
-        },
-        rightSide: {
-            binOpIdentifier: '/',
-            leftSide: {
-                number: '3'
-            },
-            rightSide: {
-                number: '4'
-            }
-        }
-    });
+        functionName: { identifiers: ['*'] },
+        parameters: [
+            { number: '2' },
+            { functionName: { identifiers: ['/'] },
+              parameters: [
+                  { number: '3' },
+                  { number: '4' }
+        ]}]});
 });
 
 test('combined addition and multiplication (* rechts)',() => {
@@ -44,41 +35,31 @@ test('combined addition and multiplication (* rechts)',() => {
     expect(tokens).toHaveLength(6); //including EOF
     const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
-        binOpIdentifier: '+',
-        leftSide: {
-            number: '2'
-        },
-        rightSide: {
-            binOpIdentifier: '*',
-            leftSide: {
-                number: '3'
-            },
-            rightSide: {
-                number: '4'
-            }
-        }
-    });
-})
+        functionName: { identifiers: ['+'] },
+        parameters: [
+            { number: '2' },
+            { functionName: { identifiers: ['*'] },
+              parameters: [
+                  { number: '3' },
+                  { number: '4' }
+        ]}]});
+});
 
 test('combined addition and multiplication (+ rechts)',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3 + 4'} );
     expect(tokens).toHaveLength(6); //including EOF
     const ast = ParseExpression(tokens);
     expectAst(ast).toMatch({
-        binOpIdentifier: '+',
-        leftSide: {
-            binOpIdentifier: '*',
-            leftSide: {
-                number: '2'
+        functionName: { identifiers: ['+'] },
+        parameters: [
+            { functionName: { identifiers: ['*'] },
+              parameters: [
+                  { number: '2' },
+                  { number: '3' }
+              ]
             },
-            rightSide: {
-                number: '3'
-            }
-        },
-        rightSide: {
-            number: '4'
-        }
-    });
+            { number: '4' }
+        ]});
 });
 test('complex infix',() => {
     const tokens = ScanNoWhitespace({ source: '2 * 3 > 5 & 4 - 1 ^= 2'} );
@@ -86,59 +67,31 @@ test('complex infix',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        binOpIdentifier: '&',
-        leftSide: {
-            binOpIdentifier: '>',
-            leftSide: {
-                binOpIdentifier: '*',
-                leftSide:  { number: '2' },
-                rightSide: { number: '3' }
-            },
-            rightSide: { number: '5' }
+        functionName: { identifiers: ['&']},
+        parameters: [{
+            functionName: { identifiers: ['>'] },
+            parameters: [{
+                functionName: { identifiers: ['*']},
+                parameters:   [ { number: '2' }, { number: '3' } ]
+                },
+                { number: '5' }
+            ]
         },
-        rightSide: {
-            binOpIdentifier: '^=',
-            leftSide: {
-                binOpIdentifier: '-',
-                leftSide:  { number: '4' },
-                rightSide: { number: '1' }
-            },
-            rightSide: { number: '2'}
-        }
+        {
+            functionName: { identifiers: ['^='] },
+            parameters: [{
+                functionName: { identifiers: ['-']},
+                parameters: [ { number: '4' }, { number: '1' } ]
+                },
+                { number: '2'}
+            ]
+        }]
+
     };
 
     expectAst(ast).toMatch(expected);
 });
 
-test('complex infix',() => {
-    const tokens = ScanNoWhitespace({ source: '2 * 3 > 5 & 4 - 1 ^= 2'} );
-    expect(tokens).toHaveLength(12); //including EOF
-    const ast = ParseExpression(tokens);
-
-    const expected = {
-        binOpIdentifier: '&',
-        leftSide: {
-            binOpIdentifier: '>',
-            leftSide: {
-                binOpIdentifier: '*',
-                leftSide:  { number: '2' },
-                rightSide: { number: '3' }
-            },
-            rightSide: { number: '5' }
-        },
-        rightSide: {
-            binOpIdentifier: '^=',
-            leftSide: {
-                binOpIdentifier: '-',
-                leftSide:  { number: '4' },
-                rightSide: { number: '1' }
-            },
-            rightSide: { number: '2'}
-        }
-    };
-
-    expectAst(ast).toMatch(expected);
-});
 
 test('parenthesis to right',() => {
     const tokens = ScanNoWhitespace({ source: '2 * ( 3 + 4 )'} );
@@ -146,13 +99,13 @@ test('parenthesis to right',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        binOpIdentifier: '*',
-        leftSide:  { number: '2' },
-        rightSide: {
-            binOpIdentifier: '+',
-            leftSide:  { number: '3' },
-            rightSide: { number: '4' }
-        }
+        functionName: { identifiers: ['*']},
+        parameters: [
+            { number: '2' },
+            {
+                functionName: { identifiers: ['+'] },
+                parameters:   [ { number: '3' }, { number: '4' } ]
+            }]
     };
 
     expectAst(ast).toMatch(expected);
@@ -164,13 +117,13 @@ test('parenthesis to left',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        binOpIdentifier: '*',
-        leftSide: {
-            binOpIdentifier: '+',
-            leftSide:  { number: '2' },
-            rightSide: { number: '3' }
-        },
-        rightSide:  { number: '4' }
+        functionName: { identifiers: ['*']},
+        parameters: [
+            { functionName: { identifiers: ['+'] },
+              parameters: [ { number: '2' }, { number: '3' } ]
+            },
+            { number: '4' }
+        ]
     };
 
     expectAst(ast).toMatch(expected);
@@ -182,9 +135,8 @@ test('simple qIdentifier expression left',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        binOpIdentifier: '+',
-        leftSide:  { identifiers: ['i'] },
-        rightSide: { number: '1'}
+        functionName: { identifiers: ['+']},
+        parameters: [ { identifiers: ['i'] }, { number: '1'} ]
     };
 
     expectAst(ast).toMatch(expected);
@@ -196,9 +148,8 @@ test('simple qIdentifier expression right',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        binOpIdentifier: '+',
-        leftSide:  { number: '1'},
-        rightSide: { identifiers: ['i'] }
+        functionName: { identifiers: ['+']},
+        parameters:   [ { number: '1'}, { identifiers: ['i'] } ]
     };
 
     expectAst(ast).toMatch(expected);
@@ -210,9 +161,11 @@ test('full qIdentifier expression left',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        binOpIdentifier: '+',
-        leftSide:  { identifiers: ['person','year'] },
-        rightSide: { number: '1'}
+        functionName: { identifiers: ['+']},
+        parameters:  [
+            { identifiers: ['person','year'] },
+            { number: '1'}
+        ]
     };
 
     expectAst(ast).toMatch(expected);
@@ -223,9 +176,8 @@ test('full qIdentifier expression right',() => {
     const ast = ParseExpression(tokens);
 
     const expected = {
-        binOpIdentifier: '+',
-        leftSide:  { number: '1'},
-        rightSide: { identifiers: ['person','year'] }
+        functionName: { identifiers: ['+']},
+        parameters: [{ number: '1'}, { identifiers: ['person','year'] }]
     };
 
     expectAst(ast).toMatch(expected);

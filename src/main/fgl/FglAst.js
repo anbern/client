@@ -13,7 +13,9 @@ export const NodeType = {
     EXPRESSION_LITERAL_STRING:
                             'EXPRESSION_LITERAL_STRING',
     EXPRESSION_LITERAL_BOOLEANVALUE:
-                            'EXPRESSION_LITERAL_BOOLEANVALUE'
+                            'EXPRESSION_LITERAL_BOOLEANVALUE',
+    EXPRESSION_PARAM_EXPRESSION_LIST:
+                            'EXPRESSION_PARAM_EXPRESSION_LIST'
 
 }
 class AstNode {
@@ -46,6 +48,11 @@ export class BlockStatementNode extends ParentAstNode {
     }
 }
 
+export class ParamExpressionListNode extends ParentAstNode {
+    constructor(sourceCodeReference) {
+        super(sourceCodeReference, NodeType.EXPRESSION_PARAM_EXPRESSION_LIST)
+    }
+}
 export class AssignmentStatementNode extends ParentAstNode {
     constructor(sourceCodeReference) {
         super(sourceCodeReference, NodeType.STATEMENT_ASSIGNMENT);
@@ -78,9 +85,9 @@ export class QIdentifierNode extends ParentAstNode {
 }
 
 export class FunctionInvocationNode extends ParentAstNode {
-    constructor(sourceCodeReference, binOpIdentifier) {
+    constructor(sourceCodeReference, operatorIdentifier) {
         super(sourceCodeReference, NodeType.EXPRESSION_FUNCTIONINVOCATION);
-        this.binOpIdentifier = binOpIdentifier;
+        this.operatorIdentifier = operatorIdentifier;
     }
 }
 

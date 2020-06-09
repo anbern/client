@@ -23,16 +23,16 @@ export default function expectAst(ast) {
 }
 
 function matchTree(ast,expected) {
-    if (expected.binOpIdentifier) {
-        matchBinOp(ast,expected);
+    if (expected.functionName) {
+        matchFunctionInvocation(ast,expected);
     } else if (expected.number) {
         matchNumberLiteral(ast,expected);
-    } else if (expected.string) {
+    } else if (expected.string !== undefined) { //accept empty string as well (which is falsy)
         matchStringLiteral(ast,expected);
-    } else if (expected.booleanValue) {
+    } else if (expected.booleanValue !== undefined) { //accept "false" value test (false is falsy)
         matchBooleanLiteral(ast,expected);
     } else if (expected.identifiers) {
-        matchQIdentifier(ast,expected);
+        matchQIdentifier(ast, expected);
     } else if (expected.statementType) {
         switch(expected.statementType) {
             case 'assignment':
@@ -57,6 +57,8 @@ function matchTree(ast,expected) {
                 throw new Error('Unknown statement type expected ' + expected.statementType);
                 //break;
         }
+    } else {
+        throw new Error('Unknown expectation');
     }
 }
 
@@ -130,13 +132,11 @@ function matchWhileStatement(ast, expected) {
     }
 }
 
-function matchBinOp(ast,operator) {
-    expect(ast).toMatchObject({binOpIdentifier:operator.binOpIdentifier});
-    expect(ast.children).toHaveLength(2);
-    const leftSide = ast.children[0];
-    const rightSide = ast.children[1];
-    matchTree(leftSide,operator.leftSide);
-    matchTree(rightSide,operator.rightSide);
+function matchFunctionInvocation(ast,functionInvocation) {
+    matchQIdentifier(ast.operatorIdentifier,functionInvocation.functionName);
+    ast.children.forEach( (expression,index) => {
+        matchTree(expression,functionInvocation.parameters[index]);
+    })
 }
 
 function matchNumberLiteral(ast,numberLiteral) {

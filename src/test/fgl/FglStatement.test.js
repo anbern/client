@@ -65,9 +65,8 @@ test('if statement w/o else', () => {
     expectAst(ast).toMatch({
         statementType: 'if',
         ifExpression: {
-            binOpIdentifier: '<',
-            leftSide: { identifiers: ['x'] },
-            rightSide:{ number: '2' }
+            functionName: { identifiers: ['<']},
+            parameters: [{ identifiers: ['x'] }, { number: '2' } ]
         },
         ifBranch: {
             statementType: 'block',
@@ -87,9 +86,8 @@ test('if statement with else', () => {
     expectAst(ast).toMatch({
         statementType: 'if',
         ifExpression: {
-            binOpIdentifier: '<',
-            leftSide: { identifiers: ['x'] },
-            rightSide:{ number: '2' }
+            functionName: { identifiers: ['<']},
+            parameters: [{ identifiers: ['x'] }, { number: '2' }]
         },
         ifBranch: {
             statementType: 'block',
@@ -117,9 +115,8 @@ test('do...until statement', () => {
     expectAst(ast).toMatch({
         statementType: 'until',
         untilExpression: {
-            binOpIdentifier: '>',
-            leftSide: { identifiers: ['i']},
-            rightSide: { number: '10'}
+            functionName: { identifiers: ['>'] },
+            parameters: [{ identifiers: ['i']}, { number: '10'}]
         },
         blockStatement: {
             statementType: 'block',
@@ -140,9 +137,8 @@ test('while statement', () => {
     expectAst(ast).toMatch({
         statementType: 'while',
         whileExpression: {
-            binOpIdentifier: '<',
-            leftSide: { identifiers: ['i']},
-            rightSide: { number: '10'}
+            functionName: { identifiers: ['<'] },
+            parameters: [ { identifiers: ['i']}, { number: '10'}]
         },
         blockStatement: {
             statementType: 'block',
@@ -150,9 +146,8 @@ test('while statement', () => {
                 statementType: 'assignment',
                 lvalue: { identifiers: ['i']},
                 rvalue: {
-                    binOpIdentifier: '+',
-                    leftSide:  { identifiers: ['i']},
-                    rightSide: { number: '1'}
+                    functionName: { identifiers: ['+']},
+                    parameters: [{ identifiers: ['i']}, { number: '1'}]
                 }
             }]
         }

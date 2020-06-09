@@ -39,17 +39,46 @@ test('a short program', () => {
 
 test('a do...until program', () => {
     const runtime = new Runtime();
+    runtime.addDebugLine(3, Debugger.Event.AfterStatement,
+        (node,scope,result) => {
+            if (node.nodeType === NodeType.STATEMENT_BLOCK) {
+                expect(scope).toBeDefined();
+                expect(scope.lookup('i')).toBe(10);
+            }});
     runtime.loadAndRun({source:
-            '{' +
-                '\ti = 0\r\n' +
-                '\tdo { parentScope.i = parentScope.i + 1 } until i > 9\r\n' +
-            '}'});
+            '{\r\n' +                                                           // 0000
+                '\ti = 0\r\n' +                                                 // 0001
+                '\tdo { parentScope.i = parentScope.i + 1 } until i > 9\r\n' +  // 0002
+            '}'});                                                              // 0003
 });
 
 test('a while program', () => {
     const runtime = new Runtime();
-    runtime.loadAndRun({source:'{' +
-            '\ti = 10\r\n' +
-            '\twhile i > 1 { parentScope.i = parentScope.i - 1 }\r\n' +
-            '}'});
+    runtime.addDebugLine(4, Debugger.Event.AfterStatement,
+        (node,scope,result) => {
+            if (node.nodeType === NodeType.STATEMENT_BLOCK) {
+                expect(scope).toBeDefined();
+                expect(scope.lookup('i')).toBe(1);
+            }});
+
+    runtime.loadAndRun({source:
+            '{\r\n' +                                               // 0000
+                '\ti = 10\r\n' +                                    // 0001
+                '\twhile i > 1\r\n' +                               // 0002
+                '\t\t{ parentScope.i = parentScope.i - 1 }\r\n' +   // 0003
+            '}'});                                                  // 0004
+});
+
+// Debug mode
+// Ryzen 3900X X570 64GB: 668ms according to jest
+// this seems to be EXTREMLY SLOW
+// then again, it's 1 million additions and
+//      1 million condition checks
+test('simplistic speed test', () => {
+    const runtime = new Runtime();
+    runtime.loadAndRun({source:
+            '{\r\n' +                                                                   // 0000
+                '\ti = 0\r\n' +                                                         // 0001
+                '\tdo { parentScope.i = parentScope.i + 1 } until i > 1000000\r\n' +    // 0002
+            '}'});                                                                      // 0003
 });
