@@ -170,7 +170,8 @@ export class Runtime  {
     }
 
     interpretStatement(astNode, scope) {
-        this.debugger.enterStatement(astNode, scope);
+        //careful: you never get blockscope this way
+        //this.debugger.enterStatement(astNode, scope);
         let result;
         if (astNode instanceof EmptyStatementNode) {
             result = this.interpretEmptyStatement(astNode,scope);
@@ -185,7 +186,7 @@ export class Runtime  {
         } else if (astNode instanceof UntilStatementNode) {
             result = this.interpretUntilStatement(astNode, scope);
         }
-        this.debugger.exitStatement(astNode, scope, result);
+        //this.debugger.exitStatement(astNode, scope, result);
         return result;
     }
 
@@ -196,51 +197,58 @@ export class Runtime  {
     interpretBlockStatement(blockNode,parentScope) {
         const blockScope = new Scope(parentScope);
         let result = undefined;
+        this.debugger.enterStatement(blockNode,blockScope);
         blockNode.children.forEach(statement =>
             result = this.interpretStatement(statement, blockScope));
+        this.debugger.exitStatement(blockNode, blockScope,result);
         return result;
     }
 
     interpretAssignmentStatement(assignmentNode,scope) {
-
+        this.debugger.enterStatement(assignmentNode,scope);
         const value       = this.evaluateExpression(assignmentNode.children[1], scope);
         const qIdentifier = assignmentNode.children[0];
         const targetInfo  = this.evaluateQIdentifierLValue(qIdentifier, scope);
 
         targetInfo.lScope.setValue(targetInfo.lIdentifier,value);
+        this.debugger.exitStatement(assignmentNode,scope,value);
         return value;
     }
 
     interpretIfStatement(ifNode, scope) {
-
+        this.debugger.enterStatement(ifNode, scope);
         const value = this.evaluateExpression(ifNode.ifExpression, scope);
+        let result;
         if (value) {
-            return this.interpret(ifNode.children[0],scope);
+            result = this.interpret(ifNode.children[0],scope);
         } else {
             if (ifNode.children.length > 1) {
-                return this.interpret(ifNode.children[1], scope);
+                result = this.interpret(ifNode.children[1], scope);
             } else {
-                return undefined;
+                result = undefined;
             }
         }
-
+        this.debugger.exitStatement(ifNode, scope, result);
     }
 
     interpretWhileStatement(whileNode, scope) {
-
+        this.debugger.enterStatement(whileNode,scope);
         let result;
         while(this.evaluateExpression(whileNode.whileExpression, scope)) {
             result = this.interpretStatement(whileNode.children[0],scope);
         }
+        this.debugger.exitStatement(whileNode,scope,result);
         return result;
 
     }
 
     interpretUntilStatement(untilNode, scope) {
+        this.debugger.enterStatement(untilNode, scope);
         let result;
         do {
             result = this.interpretStatement(untilNode.children[0],scope);
         } while (!this.evaluateExpression(untilNode.untilExpression, scope));
+        this.debugger.exitStatement(untilNode, scope, result);
         return result;
     }
 
