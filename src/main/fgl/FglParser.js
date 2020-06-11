@@ -207,13 +207,23 @@ class Parser {
         if (qIdentifier) {
             const openParen = this.peek();
             if (openParen.is('(')) {
-                const paramExpressionList = this.parseParamExpressionList();
-                const functionInvocationSourceCodeReference = qIdentifier.sourceCodeReference.copy();
-                functionInvocationSourceCodeReference.append(paramExpressionList.sourceCodeReference);
+                this.consumeToken();
+                const functionInvocationSourceCodeReference = SourceCodeReference.copy(qIdentifier.sourceCodeReference);
                 result = new FunctionInvocationNode(
                     functionInvocationSourceCodeReference,
                     qIdentifier);
-                result.children = paramExpressionList.children;
+                const paramExpressionList = this.parseParamExpressionList();
+                if (paramExpressionList) {
+                    functionInvocationSourceCodeReference.append(paramExpressionList.sourceCodeReference);
+                    result.children = paramExpressionList.children;
+                }
+                const closingParen = this.peek();
+                if (closingParen.is(')')) {
+                    this.consumeToken();
+                    result.sourceCodeReference.append(closingParen.sourceCodeReference);
+                } else {
+                    throw new Error ('Closing paren expected');
+                }
             } else {
                 result = qIdentifier;
             }
@@ -224,42 +234,30 @@ class Parser {
     }
 
     parseParamExpressionList() {
-        const openParen = this.peek();
-        let result;
-        if (openParen.is('(')) {
-            const firstExpression = this.parseInfixFunctionInvocationLevel(3);
-            const paramExpressionSourceCodeReference = firstExpression.sourceCodeReference.copy();
-            result = new ParamExpressionListNode(paramExpressionSourceCodeReference);
-            const restList = this.parseParamExpressionListRest();
-            if (restList) {
-                result.sourceCodeReference.append(restList.sourceCodeReference);
-                result.children = [firstExpression].concat(restList.children);
-            } else {
-                const closeParen = this.peek();
-                if (closeParen.is(')')) {
-                    this.consumeToken();
-                } else {
-                    throw new Error("Closing paren expected");
-                }
-            }
+        const firstExpression = this.parseInfixFunctionInvocationLevel(3);
+        if (!firstExpression) {
+            //empty function invocation f()
+            return null;
+        }
+        const paramExpressionSourceCodeReference = SourceCodeReference.copy(firstExpression.sourceCodeReference);
+        const result = new ParamExpressionListNode(paramExpressionSourceCodeReference);
+        const restList = this.parseParamExpressionListRest();
+        if (restList) {
+            result.sourceCodeReference.append(restList.sourceCodeReference);
+            result.children = [firstExpression].concat(restList.children);
         } else {
-            result = null;
+            result.children.push(firstExpression);
         }
         return result;
     }
 
     parseParamExpressionListRest() {
-        const commaOrClosingParen = this.peek();
+        const comma = this.peek();
         let result;
-        if (commaOrClosingParen.is(',')) {
+        if (comma.is(',')) {
             this.consumeToken();
             const restExpression = this.parseParamExpressionList();
             result = restExpression;
-        } else if (commaOrClosingParen.is(')')) {
-            this.consumeToken();
-            //Artificial empty statement to keep the source Code reference count intact
-            //Room for improvement given...
-            result = new EmptyStatementNode(commaOrClosingParen.sourceCodeReference);
         } else {
             result = null;
         }
