@@ -82,3 +82,28 @@ test('simplistic speed test', () => {
                 '\tdo { parentScope.i = parentScope.i + 1 } until i > 1000000\r\n' +    // 0002
             '}'});                                                                      // 0003
 });
+
+test('function declaration and invocation test', () => {
+   const runtime = new Runtime();
+    runtime.addDebugLine(4, Debugger.Event.AfterStatement,
+        (node,scope,result) => {
+            if (node.nodeType === NodeType.STATEMENT_BLOCK) {
+                expect(scope).toBeDefined();
+                expect(scope.lookup('plusResult')).toBe(3);
+            }});
+    /*
+     parentScope: the parent scope of the block statement of the function body
+     which is the activation record constructed during function invocation
+     which is NOT AVAILABLE at the completion of the assignment statement
+     but it's parent scope is the global scope
+     so scopes are: global -> activation record -> function body block scope
+     parent.parent resolves to global which is available for debugging
+     */
+   runtime.loadAndRun({source:
+        '{\r\n' +                                   //0000
+        '\tfunction plus ( a , b )\r\n' +           //0001
+        '\t\t{ parentScope.parentScope.plusResult = a + b }\r\n' +    //0002
+        '\tresult = plus ( 1 , 2)\r\n' +            //0003
+        '}'                                         //0004
+   });
+});

@@ -1,6 +1,7 @@
 import {
     EmptyStatementNode, BlockStatementNode, AssignmentStatementNode,
     IfStatementNode, WhileStatementNode, UntilStatementNode,
+    FunctionDeclarationStatementNode,
     FunctionInvocationNode, QIdentifierNode,
     NumberLiteralNode, StringLiteralNode, BooleanLiteralNode } from './FglAst';
 import { ScanNoWhitespace } from './FglScanner';
@@ -173,7 +174,9 @@ export class Runtime  {
         //careful: you never get blockscope this way
         //this.debugger.enterStatement(astNode, scope);
         let result;
-        if (astNode instanceof EmptyStatementNode) {
+        if (astNode instanceof FunctionDeclarationStatementNode) {
+            result = this.interpretFunctionDeclarationStatement(astNode, scope);
+        } else if (astNode instanceof EmptyStatementNode) {
             result = this.interpretEmptyStatement(astNode,scope);
         } else if (astNode instanceof BlockStatementNode) {
             result = this.interpretBlockStatement(astNode, scope);
@@ -188,6 +191,11 @@ export class Runtime  {
         }
         //this.debugger.exitStatement(astNode, scope, result);
         return result;
+    }
+
+    interpretFunctionDeclarationStatement(functionDeclarationStatementNode, scope) {
+        const targetInfo = this.evaluateQIdentifierLValue(functionDeclarationStatementNode.functionName, scope);
+        targetInfo.lScope.setValue(targetInfo.lIdentifier, functionDeclarationStatementNode);
     }
 
     interpretEmptyStatement(emptyNode, scope) {
@@ -296,20 +304,36 @@ export class Runtime  {
     //So undefined, null, ===, !==, NaN etc should work
 
     evaluateFunctionInvocation(functionInvocationNode, scope) {
-        const leftValue =
-            this.evaluateExpression(functionInvocationNode.children[0], scope);
-        const rightValue =
-            this.evaluateExpression(functionInvocationNode.children[1], scope);
-        let result;
-        const functionQName = functionInvocationNode.operatorIdentifier.children;
-        if (functionQName.length === 1) {
-            result = this.evaluateBuiltInFunction(functionQName[0], leftValue, rightValue);
-        }
-        if (result === undefined) {
-            throw new Error ('Cannot yet evaluate ' + functionQName[0] + '...');
+
+        let result = undefined;
+
+        const parameterValues = [];
+        functionInvocationNode.children.forEach(expression => {
+           parameterValues.push(this.evaluateExpression(expression, scope));
+        });
+
+        const functionDeclaration = this.evaluateQIdentifierRValue(functionInvocationNode.operatorIdentifier, scope);
+        if (!functionDeclaration) {
+            const leftValue  = parameterValues[0];
+            const rightValue = parameterValues[1];
+            const functionQName = functionInvocationNode.operatorIdentifier.children;
+            if (functionQName.length === 1) {
+                result = this.evaluateBuiltInFunction(functionQName[0], leftValue, rightValue);
+            }
+        } else {
+            const invocationRecord = new Scope(scope);
+            //match the parameters in the invocation record
+            functionDeclaration.children.forEach( (formalParam, index) => {
+                const target = this.evaluateQIdentifierLValue(formalParam,invocationRecord);
+                //What is this? Call by value? by reference? by ...?
+                target.lScope.setValue(target.lIdentifier, parameterValues[index]);
+            });
+            //currently it is ALWAYS a block statement; This implementation is more general for future use
+            result = this.interpretStatement(functionDeclaration.functionBody, invocationRecord);
         }
         return result;
     }
+
 
     evaluateBuiltInFunction(name, leftValue, rightValue) {
         let result;
