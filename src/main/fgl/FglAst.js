@@ -1,4 +1,6 @@
 export const NodeType = {
+    STATEMENT_FUNCTION_DECLARATION:
+                            'STATEMENT_FUNCTION_DECLARATION',
     STATEMENT_EMPTY:        'STATEMENT_EMPTY',
     STATEMENT_BLOCK:        'STATEMENT_BLOCK',
     STATEMENT_ASSIGNMENT:   'STATEMENT_ASSIGNMENT',
@@ -33,6 +35,14 @@ class ParentAstNode extends AstNode {
 
     addChild(child) {
         this.children.push(child);
+    }
+}
+
+export class FunctionDeclarationStatementNode extends ParentAstNode {
+    constructor(sourceCodeReference, functionName, functionBody) {
+        super(sourceCodeReference, NodeType.STATEMENT_FUNCTION_DECLARATION);
+        this.functionName = functionName;
+        this.functionBody = functionBody;
     }
 }
 

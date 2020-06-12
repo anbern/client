@@ -1,6 +1,7 @@
 import {
     EmptyStatementNode, BlockStatementNode, AssignmentStatementNode,
     IfStatementNode, WhileStatementNode, UntilStatementNode,
+    FunctionDeclarationStatementNode,
     FunctionInvocationNode, QIdentifierNode,
     ParamExpressionListNode,
     NumberLiteralNode, StringLiteralNode, BooleanLiteralNode } from './FglAst';
@@ -18,7 +19,9 @@ class Parser {
 
     parseStatement() {
         const nextToken = this.peek();
-        if (nextToken.is('{')) {
+        if (nextToken.is('function')) {
+            return this.parseFunctionDeclarationStatement();
+        } else if (nextToken.is('{')) {
             return this.parseBlockStatement();
         } else if (nextToken.isIdentifier()) {
             return this.parseAssignmentStatement();
@@ -31,6 +34,27 @@ class Parser {
         } else if (nextToken.is(';')) {
             return this.parseEmptyStatement();
         }
+    }
+
+    parseFunctionDeclarationStatement() {
+        let result = null;
+        const functionKeyword = this.peek();
+        if (functionKeyword.is('function')) {
+            this.consumeToken();
+            const functionName = this.parseQIdentifier();
+            const functionParameterList = this.parseFunctionParameterList();
+            const functionBody = this.parseBlockStatement();
+            const sourceCodeReference = SourceCodeReference.copy(functionKeyword.sourceCodeReference);
+            sourceCodeReference.append(functionBody.sourceCodeReference);
+            const functionDeclaration = new FunctionDeclarationStatementNode(sourceCodeReference,
+                functionName,
+                functionBody);
+            functionDeclaration.children = functionParameterList.children;
+            result = functionDeclaration;
+        } else {
+            result = null;
+        }
+        return result;
     }
 
     parseBlockStatement() {
