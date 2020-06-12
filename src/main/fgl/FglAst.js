@@ -1,6 +1,8 @@
 export const NodeType = {
     STATEMENT_FUNCTION_DECLARATION:
                             'STATEMENT_FUNCTION_DECLARATION',
+    STATEMENT_FUNCTION_PARAMETER_LIST:
+                            'STATEMENT_FUNCTION_PARAMETER_LIST',
     STATEMENT_EMPTY:        'STATEMENT_EMPTY',
     STATEMENT_BLOCK:        'STATEMENT_BLOCK',
     STATEMENT_ASSIGNMENT:   'STATEMENT_ASSIGNMENT',
@@ -55,6 +57,12 @@ export class EmptyStatementNode extends AstNode {
 export class BlockStatementNode extends ParentAstNode {
     constructor(sourceCodeReference) {
         super(sourceCodeReference, NodeType.STATEMENT_BLOCK);
+    }
+}
+
+export class FunctionParameterListNode extends ParentAstNode {
+    constructor(sourceCodeReference) {
+        super(sourceCodeReference, NodeType.STATEMENT_FUNCTION_PARAMETER_LIST)
     }
 }
 

@@ -23,7 +23,9 @@ export default function expectAst(ast) {
 }
 
 function matchTree(ast,expected) {
-    if (expected.functionName) {
+    if (expected.declares) {
+        matchFunctionDeclaration(ast,expected);
+    } else if (expected.functionName) {
         matchFunctionInvocation(ast,expected);
     } else if (expected.number) {
         matchNumberLiteral(ast,expected);
@@ -132,6 +134,14 @@ function matchWhileStatement(ast, expected) {
     }
 }
 
+function matchFunctionDeclaration(ast,functionDeclaration) {
+    matchQIdentifier(ast.functionName, functionDeclaration.declares);
+    expect(ast.children).toHaveLength(functionDeclaration.parameters.length);
+    functionDeclaration.parameters.forEach((formalParameter,index) => {
+        matchQIdentifier(ast.children[index],formalParameter);
+    });
+    matchTree(ast.functionBody, functionDeclaration.body);
+}
 function matchFunctionInvocation(ast,functionInvocation) {
     matchQIdentifier(ast.operatorIdentifier,functionInvocation.functionName);
     ast.children.forEach( (expression,index) => {

@@ -1,7 +1,7 @@
 import {
     EmptyStatementNode, BlockStatementNode, AssignmentStatementNode,
     IfStatementNode, WhileStatementNode, UntilStatementNode,
-    FunctionDeclarationStatementNode,
+    FunctionDeclarationStatementNode, FunctionParameterListNode,
     FunctionInvocationNode, QIdentifierNode,
     ParamExpressionListNode,
     NumberLiteralNode, StringLiteralNode, BooleanLiteralNode } from './FglAst';
@@ -53,6 +53,48 @@ class Parser {
             result = functionDeclaration;
         } else {
             result = null;
+        }
+        return result;
+    }
+
+    parseFunctionParameterList() {
+        let result = null;
+        const openParen = this.peek();
+        if (openParen.is('(')) {
+            this.consumeToken();
+            const functionParameterListNode =
+                new FunctionParameterListNode(openParen.sourceCodeReference);
+            let isInParameterList = true;
+            while(isInParameterList) {
+
+                const nextId = this.peek();
+                if (nextId.is(')')) { //empty list f()
+                    break;
+                }
+                //nextId is valid Id
+                const qIdentifierNode = this.parseQIdentifier();
+                functionParameterListNode.addChild(qIdentifierNode);
+                functionParameterListNode.sourceCodeReference.append(qIdentifierNode.sourceCodeReference);
+
+                const commaOption = this.peek();
+                if (commaOption.is(',')) {
+                    this.consumeToken();
+                    isInParameterList = true;
+                    const nextQIdentifierNode = this.parseQIdentifier();
+                    functionParameterListNode.addChild(nextQIdentifierNode);
+                    functionParameterListNode.sourceCodeReference.append(nextQIdentifierNode.sourceCodeReference);
+                } else {
+                    isInParameterList = false;
+                }
+            }
+            const closeParen = this.peek();
+            if (closeParen.is(')')) {
+                this.consumeToken();
+                functionParameterListNode.sourceCodeReference.append(closeParen.sourceCodeReference);
+            } else {
+                throw new Error ('closing paren expected (parameter list)');
+            }
+            result = functionParameterListNode;
         }
         return result;
     }

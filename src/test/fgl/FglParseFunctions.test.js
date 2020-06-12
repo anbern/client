@@ -1,5 +1,5 @@
 import { ScanNoWhitespace } from '../../main/fgl/FglScanner';
-import { ParseExpression } from '../../main/fgl/FglParser';
+import { ParseExpression, ParseStatement } from '../../main/fgl/FglParser';
 import expectAst from './FglAstMatcher';
 
 
@@ -51,4 +51,67 @@ test('function invocations of paren expressions', () => {
                        { number: '4' },
                        { number: '5'}
             ]}]}]}); //wouldn't lisp be just better?
+});
+
+test('function declaration 2 params', () => {
+    const tokens = ScanNoWhitespace({ source: 'function plus ( a , b ) { plus = a + b }'} );
+    expect(tokens).toHaveLength(15); //including EOF
+    const ast = ParseStatement(tokens);
+    expectAst(ast).toMatch({
+        declares: { identifiers: ['plus']},
+        parameters: [ { identifiers: ['a'] }, { identifiers: ['b'] } ],
+        body: {
+            statementType: 'block',
+            statements: [
+                { statementType: 'assignment',
+                    lvalue: { identifiers: ['plus']},
+                    rvalue: {
+                        functionName: { identifiers: ['+']},
+                        parameters: [ { identifiers:['a'] }, { identifiers:['b'] }]
+                    }
+                }
+            ]
+        }
+    });
+});
+
+test('function declaration 1 param', () => {
+    const tokens = ScanNoWhitespace({ source: 'function uminus ( a ) { uminus = 0 - a }'} );
+    expect(tokens).toHaveLength(13); //including EOF
+    const ast = ParseStatement(tokens);
+    expectAst(ast).toMatch({
+        declares: { identifiers: ['uminus']},
+        parameters: [ { identifiers: ['a'] } ],
+        body: {
+            statementType: 'block',
+            statements: [
+                { statementType: 'assignment',
+                    lvalue: { identifiers: ['uminus']},
+                    rvalue: {
+                        functionName: { identifiers: ['-']},
+                        parameters: [ { number: '0' }, { identifiers:['a'] }]
+                    }
+                }
+            ]
+        }
+    });
+});
+
+test('function declaration zero param', () => {
+    const tokens = ScanNoWhitespace({ source: 'function random ( ) { random = systemtime }'} );
+    expect(tokens).toHaveLength(10); //including EOF
+    const ast = ParseStatement(tokens);
+    expectAst(ast).toMatch({
+        declares: { identifiers: ['random']},
+        parameters: [ ],
+        body: {
+            statementType: 'block',
+            statements: [
+                { statementType: 'assignment',
+                    lvalue: { identifiers: ['random']},
+                    rvalue: { identifiers:  ['systemtime']}
+                }
+            ]
+        }
+    });
 });
