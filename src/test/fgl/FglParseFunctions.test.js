@@ -24,7 +24,7 @@ test('empty function invocation',() => {
         });
 });
 
-test('function invocations of function invocations', () => {
+test('function invocation of function invocation', () => {
     const tokens = ScanNoWhitespace({ source: 'f ( g ( x ) )'} );
     expect(tokens).toHaveLength(8); //including EOF
     const ast = ParseExpression(tokens);

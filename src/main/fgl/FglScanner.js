@@ -179,7 +179,10 @@ class Scanner {
         }
     }
     scanBracket() {
-        return this.scanSomething(character => !ScannedCharacters.isBracket(character));
+        //Translates () into "()"
+        //return this.scanSomething(character => !ScannedCharacters.isBracket(character));
+        //a bracket is ALWAYS EXACTLY === 1 character, so ALWAYS break scan loop on next char
+        return this.scanSomething(character => true);
     }
 
     scanPunctuation() {

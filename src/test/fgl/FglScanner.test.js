@@ -93,6 +93,28 @@ test('full parse', () => {
 });
 
 /*
+ * Special cases / debug support
+ */
+
+test('open/close (empty) parenthesis', () => {
+   mockModule.source='()';
+   const tokens = Scan(mockModule);
+   isBracket(tokens[0],'(');
+   isBracket(tokens[1],')');
+});
+test('open/close (empty) brackets', () => {
+    mockModule.source='[]';
+    const tokens = Scan(mockModule);
+    isBracket(tokens[0],'[');
+    isBracket(tokens[1],']');
+});
+test('open/close (empty) braces', () => {
+    mockModule.source='{}';
+    const tokens = Scan(mockModule);
+    isBracket(tokens[0],'{');
+    isBracket(tokens[1],'}');
+});
+/*
  * Helper functions (hoisted)
  */
 
