@@ -196,6 +196,7 @@ export class Runtime  {
     interpretFunctionDeclarationStatement(functionDeclarationStatementNode, scope) {
         const targetInfo = this.evaluateQIdentifierLValue(functionDeclarationStatementNode.functionName, scope);
         targetInfo.lScope.setValue(targetInfo.lIdentifier, functionDeclarationStatementNode);
+        return undefined;
     }
 
     interpretEmptyStatement(emptyNode, scope) {
@@ -237,6 +238,7 @@ export class Runtime  {
             }
         }
         this.debugger.exitStatement(ifNode, scope, result);
+        return result;
     }
 
     interpretWhileStatement(whileNode, scope) {
